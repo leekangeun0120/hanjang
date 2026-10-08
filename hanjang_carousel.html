@@ -7,13 +7,14 @@
 <title>한장한장 · 카드뉴스 캐러셀 만들기</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&family=Nanum+Myeongjo:wght@400;800&family=Noto+Serif+KR:wght@400;900&family=Jua&family=Do+Hyeon&family=Black+Han+Sans&family=Gowun+Dodum&family=Gowun+Batang:wght@400;700&family=Nanum+Pen+Script&family=Gaegu:wght@400;700&family=Gamja+Flower&family=Sunflower:wght@300;700&family=Hi+Melody&family=Dongle:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;700&display=swap">
 <style>
 :root{--bg:#fff;--card:#f2f2f3;--ink:#111;--sub:#8b8b90;--line:#e7e7ea;--surface:#fff;--soft:#f1f1f3;--outer:#e8e8ea;--panel:#29292b;--panel2:#3d3d40;--warn:#e5484d}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161618;--card:#222225;--ink:#f2f2f3;--sub:#9a9aa0;--line:#2e2e32;--surface:#2b2b2e;--soft:#333337;--outer:#0c0c0d}}
 :root[data-theme="dark"]{--bg:#161618;--card:#222225;--ink:#f2f2f3;--sub:#9a9aa0;--line:#2e2e32;--surface:#2b2b2e;--soft:#333337;--outer:#0c0c0d}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:var(--outer);font-family:"Noto Sans KR",system-ui,sans-serif;color:var(--ink);-webkit-user-select:none;user-select:none;overscroll-behavior:none;-webkit-text-size-adjust:100%}
+html,body{margin:0;height:100%;background:var(--outer);font-family:"Pretendard Variable","Noto Sans KR",system-ui,sans-serif;color:var(--ink);-webkit-user-select:none;user-select:none;overscroll-behavior:none;-webkit-text-size-adjust:100%}
 textarea,input{-webkit-user-select:text;user-select:text;font:inherit}
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
 button:focus-visible{outline:2px solid #3b6cff;outline-offset:2px}
@@ -294,13 +295,13 @@ const H=()=>RAT[P.ratio];
 const curPg=()=>P.pages[cur];
 
 /* ============ 글꼴 ============ */
-const FONTS=[['Noto Sans KR','본고딕'],['Black Han Sans','검은고딕'],['Do Hyeon','도현'],['Jua','주아'],['Gowun Dodum','고운돋움'],['Sunflower','해바라기'],['Dongle','동글'],['IBM Plex Sans KR','플렉스'],['Nanum Myeongjo','나눔명조'],['Noto Serif KR','본명조'],['Gowun Batang','고운바탕'],['Nanum Pen Script','나눔펜'],['Gaegu','개구'],['Gamja Flower','감자꽃'],['Hi Melody','하이멜로디']];
+const FONTS=[['Pretendard Variable','프리텐다드'],['Noto Sans KR','본고딕'],['system-ui','시스템'],['Black Han Sans','검은고딕'],['Do Hyeon','도현'],['Jua','주아'],['Gowun Dodum','고운돋움'],['Sunflower','해바라기'],['Dongle','동글'],['IBM Plex Sans KR','플렉스'],['Nanum Myeongjo','나눔명조'],['Noto Serif KR','본명조'],['Gowun Batang','고운바탕'],['Nanum Pen Script','나눔펜'],['Gaegu','개구'],['Gamja Flower','감자꽃'],['Hi Melody','하이멜로디']];
 const fontSeen=new Set();
 function needFont(f,w,t){const k=f+'|'+w+'|'+t;if(fontSeen.has(k))return;fontSeen.add(k);if(!document.fonts||!document.fonts.load)return;document.fonts.load(`${w} 40px "${f}"`,t||'가').then(()=>dirty(true)).catch(()=>{})}
-const FF=f=>`"${f}", "Noto Sans KR", sans-serif`;
+const FF=f=>f==='system-ui'?'system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif':`"${f}", "Noto Sans KR", sans-serif`;
 
 /* ============ 요소 ============ */
-function defText(){return{id:uid(),type:'text',x:W/2,y:675,rot:0,text:'글을 입력하세요',font:'Noto Sans KR',size:64,color:'#ffffff',weight:700,align:'center',shadow:0,stroke:0,strokeColor:'#111111',marks:[],emColor:'#ff4f8b',hlColor:'#e9ff7a',box:{bg:'#ffffff',bgA:0,glass:0,border:'#111111',bw:0,radius:0,minOn:false,minPct:80},sp:{ls:0,lh:1.3,py:14,px:22,ty:0,jitter:0},dyn:null}}
+function defText(){return{id:uid(),type:'text',x:W/2,y:675,rot:0,text:'글을 입력하세요',font:'Pretendard Variable',size:64,color:'#ffffff',weight:700,align:'center',shadow:0,stroke:0,strokeColor:'#111111',marks:[],emColor:'#ff4f8b',hlColor:'#e9ff7a',box:{bg:'#ffffff',bgA:0,glass:0,border:'#111111',bw:0,radius:0,minOn:false,minPct:80},sp:{ls:0,lh:1.3,py:14,px:22,ty:0,jitter:0},dyn:null}}
 function applyStyle(e,st){for(const k in st){if(k==='text')continue;if(k==='box'||k==='sp')Object.assign(e[k],st[k]);else e[k]=JSON.parse(JSON.stringify(st[k]))}}
 function styled(st,txt){const e=defText();applyStyle(e,st);e.text=txt!=null?txt:(st.text||'글을 입력하세요');return e}
 function restyle(e,st){const d=defText();['id','x','y','rot','text','dyn','marks'].forEach(k=>d[k]=e[k]);applyStyle(d,st);Object.keys(e).forEach(k=>delete e[k]);Object.assign(e,d)}
@@ -350,6 +351,7 @@ const STY=[
 ['라벨','흰 라벨',{size:42,weight:500,color:'#111111',box:{bg:'#ffffff',bgA:1},sp:{px:18,py:8}}],
 ['라벨','체크 항목',{size:40,weight:500,color:'#f2f2f2',box:{bg:'#3a3a3a',bgA:.9,radius:12},sp:{px:20,py:10},text:'✓ 체크 항목'}],
 ['라벨','작은 핑크 라벨',{size:34,weight:500,color:'#111111',box:{bg:'#ffd9e8',bgA:1},sp:{px:14,py:6}}],
+['라벨','핀 위치',{size:40,weight:800,shadow:40,text:'📍 장소 이름'}],
 ['라벨','DM 말풍선',{size:34,weight:500,box:{bg:'#23338c',bgA:1,radius:40},sp:{px:24,py:12},text:'질문을 적어요.'}],
 ['말풍선·판','말풍선',{size:42,weight:500,color:'#111111',box:{bg:'#ffffff',bgA:1,bw:3,border:'#111111',radius:200},sp:{px:28,py:12}}],
 ['말풍선·판','반투명 검정판',{size:42,weight:500,box:{bg:'#000000',bgA:.55,radius:16},sp:{px:26,py:12}}],
@@ -364,7 +366,7 @@ const STY=[
 ['본문','작은 출처',{size:28,weight:400,color:'#ffffffcc',shadow:20,text:'출처 · 공식 발표'}],
 ['본문','형광 강조 본문',{size:42,weight:800,color:'#dcff5c',shadow:40}],
 ['본문','가운데 두 줄',{size:40,weight:400,sp:{lh:1.5},shadow:25,text:'첫째 줄을 적고\n둘째 줄을 적어요'}],
-['본문','유리 캡션',{font:'Black Han Sans',size:52,weight:400,stroke:5,strokeColor:'#ffffff',color:'#ffffff'}]
+['본문','유리 캡션',{font:'Black Han Sans',size:52,weight:400,stroke:4,strokeColor:'#222222',color:'#ffffff',shadow:45}]
 ];
 const styleBy=n=>STY.find(s=>s[1]===n)||STY[0];
 const ACC=['흰 캡슐','{@}',.5,.93,{size:30,weight:600}], PN=['흰 캡슐','{n}',.5,.93,{size:28,weight:600}];
@@ -383,6 +385,10 @@ const PRE=[
 {name:'Q&A',pages:[[['번호 뱃지','Q. 이런 고민 있나요?',.5,.4,{size:36}],['흰 본문','답은 여기에',.5,.48,{weight:700}],ACC],[['번호 뱃지','Q. 질문을 적어요',.5,.3,{size:32}],['말풍선','A. 답을 적어요',.5,.55,{size:34}],PN],[['말풍선','더 궁금하면 댓글!',.5,.45],ACC]]},
 {name:'비포·애프터',pages:[[['번호 뱃지','BEFORE',.16,.07,{size:28}],['흰 본문','이렇게 달라졌어요',.5,.5,{weight:700}],['파랑 캡슐','AFTER',.84,.93,{size:28}]]]},
 {name:'이벤트 안내',pages:[[['빨강 알림','EVENT',.5,.32,{size:36}],['흰 굵은 제목','댓글 달면',.5,.4,{size:48}],['하늘 라벨','10.1 — 10.15',.5,.48],['파랑 캡슐','참여하기',.5,.55],ACC]]},
+{name:'문구 여행',pages:[[['민트 둥근 소제목','나혼자',.8,.07,{size:36}],['민트 둥근 제목','고삐',.8,.13,{size:54}],['민트 둥근 소제목','|',.8,.18,{size:30}],['민트 둥근 소제목','문구여행',.8,.23,{size:36}]],[['작은 출처','12:49',.12,.05,{size:28}],['핀 위치','📍 인천공항 2터미널',.3,.1,{size:34}],['흰 본문','문구 집중공략 여행!',.5,.2,{size:36,weight:700}],['유리 캡션','프레젠더스 노트(베스트셀러)',.6,.93,{size:40}]],[['민트 둥근 제목','문구여행 끝',.5,.42,{size:52}],['흰 본문','다음 편에서 만나요',.5,.5,{size:34}],ACC]]},
+{name:'문구 하울',pages:[[['노랑 스티커','HAUL',.2,.12,{size:38}],['흰 굵은 제목','이번 달 문구 하울',.5,.42,{size:62}],['라임 라벨','총 7개 · 52,000원',.5,.5],['흰 본문','하나씩 넘겨 보세요 →',.5,.57,{size:32}],ACC],[['번호 뱃지','01',.14,.08,{size:34}],['흰 판 굵은 글','제품 이름',.5,.76,{size:44}],['노랑 라벨','₩ 4,500',.5,.82,{size:36}],['반투명 검정판','한 줄 후기를 적어요',.5,.88,{size:32}],PN],[['흰 굵은 제목','이 중에 베스트는?',.5,.42,{size:54}],['말풍선','댓글로 골라 주세요!',.5,.51,{size:38}],ACC]]},
+{name:'크리에이터 썸네일',grad:{type:'black',amt:.8},pages:[[['빨강 알림','NEW',.12,.07,{size:34}],['흰 캡슐','{@}',.82,.07,{size:28}],['흰 글 검정 외곽선','눈길 끄는 큰 제목',.5,.72,{size:84,weight:900}],['라임 글 검정 외곽선','강조할 한 마디',.5,.81,{size:76}],['노랑 형광 제목','EP.01',.5,.89,{size:40}]]]},
+{name:'인용구 한 장',bg:'#2a2a2c',grad:{type:'black',amt:.75},pages:[[['명조 제목','“',.5,.34,{size:150}],['인용구','마음에 남은 문장을\n여기에 적어요',.5,.47,{size:50}],['작은 출처','— 이름, 책 제목',.5,.58,{size:30}],['흰 캡슐','{@}',.5,.93,{size:28}]]]},
 {name:'DM 한 장',bg:'#2f2f31',grad:{type:'black',amt:.7},pages:[[['DM 말풍선','질문을 적어요.',.62,.3],['DM 말풍선','답',.22,.4]]]},
 {name:'자기소개',pages:[[['흰 캡슐','{@}',.5,.36,{size:30}],['흰 굵은 제목','안녕하세요',.5,.43,{size:48}],['흰 본문','무엇을 올리는 계정인지 한 줄',.5,.5,{size:34}]]]}
 ];
@@ -398,6 +404,10 @@ const EMO={
 '사랑':['(♡˙︶˙♡)','( ˘ ³˘)♥','(灬º‿º灬)♡','♡( ◡‿◡ )','(*˘︶˘*).｡.:*♡','(｡♥‿♥｡)','( ´ ∀ `)ノ～ ♡','ʕ•́ᴥ•̀ʔっ♡'],
 '부끄':['(//∇//)','(〃∇〃)','(*^^*)','(*/∀`*)','(//・/ω/・//)','(〃ω〃)','(*´ω`*)','(๑>؂<๑)'],
 '귀여움':['ʕ•ᴥ•ʔ','(=^･ω･^=)','(• ө •)','(ᐡ•ﻌ•ᐡ)','₍ᐢ.ˬ.ᐢ₎','(っ´ω`c)','ฅ(•ㅅ•❀)ฅ','૮ ˶ᵔ ᵕ ᵔ˶ ა'],
+'인사':['(〃･ω･)ﾉ','ヾ(＾∇＾)','( ´ ▽ ` )ﾉ','(*ˊᗜˋ*)/','(ﾉ´∀｀*)ﾉ','안녕 ٩(ˊᗜˋ*)و','( ˙▿˙ )/','m(_ _)m 감사해요'],
+'놀람':['(ﾟдﾟ)','Σ(°ロ°)','(⊙_⊙)','(°o°)','!!(⊙o⊙)!!','Σ( ° △ °)','헉 (ﾟ⊿ﾟ)'],
+'슬픔':['(╥﹏╥)','(｡•́︿•̀｡)','(ಥ﹏ಥ)','(T_T)','( ´•̥̥̥ω•̥̥̥` )','(´；ω；`)','.·´¯`(>▂<)´¯`·.','ㅠㅠ'],
+'화남':['(╬ಠ益ಠ)','(｀ε´)','ヽ(｀Д´)ﾉ','(ﾉಠ益ಠ)ﾉ','( ｰ̀εｰ́ )','(◣_◢)','(눈_눈)','💢'],
 '생각':['( ˘･з･)','(・・?','(｡•ˇ‸ˇ•｡)','(￣～￣;)','( ˙꒳​˙ )','(-_-)zzz','(・_・ヾ','(｀_´)?'],
 '음악·춤':['♪(´ε` )','ヾ(⌐■_■)ノ♪','♬♩♪♩','┏(＾0＾)┛','♪~ ᕕ(ᐛ)ᕗ','(~˘▾˘)~','(ﾉ´ヮ`)ﾉ*:･ﾟ'],
 '날씨·계절':['☀︎','☁︎','☂︎','❄︎','☃︎','☾⋆','🌸','🍂','🌈','☔','⛅','🍉'],
