@@ -425,7 +425,10 @@ const EMO={
 };
 
 /* ============ 이미지 자산 ============ */
-function loadImg(id){if(IMG[id]||!ASSETS[id])return;const im=new Image();im.onload=()=>{IMG[id]=im;dirty(true)};im.src=ASSETS[id]}
+const VIDS={},VURL={};let RECORDING=false;
+function loadVid(id){if(VIDS[id]||!(ASSETS[id] instanceof Blob))return;const v=document.createElement('video');v.muted=true;v.playsInline=true;v.setAttribute('playsinline','');v.preload='auto';v.style.cssText='position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none';VURL[id]=URL.createObjectURL(ASSETS[id]);v.src=VURL[id];v.addEventListener('loadeddata',()=>{VIDS[id]=v;baseCache.clear();dirty(true)});document.body.appendChild(v);v._el=1}
+function mediaOf(pg){if(pg.video){const v=VIDS[pg.video.id];return v&&v.readyState>=2?v:null}return pg.photo&&IMG[pg.photo]}
+function loadImg(id){if(ASSETS[id] instanceof Blob){loadVid(id);return}if(IMG[id]||!ASSETS[id])return;const im=new Image();im.onload=()=>{IMG[id]=im;dirty(true)};im.src=ASSETS[id]}
 function addAsset(data){const id='a'+uid();ASSETS[id]=data;loadImg(id);return id}
 function fileToData(file,max=2160,png=false){return new Promise((res,rej)=>{const u=URL.createObjectURL(file);const im=new Image();im.onload=()=>{const sc=Math.min(1,max/Math.max(im.naturalWidth,im.naturalHeight));const c=mk(im.naturalWidth*sc,im.naturalHeight*sc);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);res(png?c.toDataURL('image/png'):c.toDataURL('image/jpeg',.92))};im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('사진을 읽지 못했어요'))};im.src=u})}
 function pickFiles(accept,multiple){return new Promise(res=>{const i=document.createElement('input');i.type='file';i.accept=accept;i.multiple=!!multiple;i.style.display='none';document.body.appendChild(i);i.onchange=()=>{res([...i.files]);i.remove()};i.click()})}
@@ -437,12 +440,12 @@ function blurCv(src,r){const w=src.width,hh=src.height,o=mk(w,hh),ox=o.getContex
   let a=mk(sw,sh);const ax=a.getContext('2d');ax.imageSmoothingQuality='high';ax.drawImage(c,0,0,sw,sh);
   while(a.width*2<w){const n=mk(a.width*2,a.height*2),nx=n.getContext('2d');nx.imageSmoothingQuality='high';nx.drawImage(a,0,0,n.width,n.height);a=n}
   ox.imageSmoothingQuality='high';ox.drawImage(a,0,0,w,hh);return o}
-function drawPhoto(x,pg,img,hh){const iw=img.naturalWidth,ih=img.naturalHeight;const r90=(pg.rot90/90)%2===1;const bw=r90?ih:iw,bh=r90?iw:ih;const res=Math.abs(pg.rotF||0)*Math.PI/180;
+function drawPhoto(x,pg,img,hh){const iw=img.naturalWidth||img.videoWidth,ih=img.naturalHeight||img.videoHeight;const r90=(pg.rot90/90)%2===1;const bw=r90?ih:iw,bh=r90?iw:ih;const res=Math.abs(pg.rotF||0)*Math.PI/180;
   let sc=Math.max(W/bw,hh/bh)*pg.fit.scale*(1+Math.sin(res)*1.25);
   x.save();x.translate(W/2+pg.fit.x,hh/2+pg.fit.y);x.rotate(((pg.rot90||0)+(pg.rotF||0))*Math.PI/180);x.drawImage(img,-iw*sc/2,-ih*sc/2,iw*sc,ih*sc);x.restore()}
-function buildBase(pg,s,hh){
+function buildBase(pg,s,hh,src){
   const c=mk(W*s,hh*s),x=c.getContext('2d');x.scale(s,s);x.fillStyle=pg.bg||'#8c8c8c';x.fillRect(0,0,W,hh);
-  const img=pg.photo&&IMG[pg.photo];
+  const img=src||mediaOf(pg);
   if(img){if(pg.blur>0){const t=mk(W*s,hh*s),tx=t.getContext('2d');tx.scale(s,s);drawPhoto(tx,pg,img,hh);x.drawImage(blurCv(t,pg.blur*.5*s),0,0,W,hh)}else drawPhoto(x,pg,img,hh)}
   if(pg.bright){x.fillStyle=pg.bright>0?`rgba(255,255,255,${pg.bright/100*.55})`:`rgba(0,0,0,${-pg.bright/100*.7})`;x.fillRect(0,0,W,hh)}
   if(pg.mask&&pg.mask.length){const m=mk(W*s,hh*s),mx=m.getContext('2d');mx.scale(s,s);mx.lineCap='round';mx.lineJoin='round';
@@ -451,7 +454,7 @@ function buildBase(pg,s,hh){
   if(pg.grad&&pg.grad.type!=='none'){const col=pg.grad.type==='white'?'255,255,255':'0,0,0';const g=x.createLinearGradient(0,hh*.3,0,hh);g.addColorStop(0,`rgba(${col},0)`);g.addColorStop(1,`rgba(${col},${pg.grad.amt})`);x.fillStyle=g;x.fillRect(0,0,W,hh)}
   return c}
 const baseCache=new Map();
-function getBase(pg,s,hh){const key=[pg.photo,IMG[pg.photo]?1:0,pg.bg,pg.fit.scale,pg.fit.x,pg.fit.y,pg.rot90,pg.rotF,pg.bright,pg.blur,pg.grad.type,pg.grad.amt,pg.mask.length,pg.maskV,hh].join('|');const ck=pg.id+'@'+s;let c=baseCache.get(ck);if(c&&c.k===key)return c;c={k:key,cv:buildBase(pg,s,hh),blur:{},s};baseCache.set(ck,c);return c}
+function getBase(pg,s,hh){const md=pg.video&&mediaOf(pg);const key=[pg.photo,IMG[pg.photo]?1:0,pg.video?pg.video.id:'',md?md.currentTime:-1,pg.bg,pg.fit.scale,pg.fit.x,pg.fit.y,pg.rot90,pg.rotF,pg.bright,pg.blur,pg.grad.type,pg.grad.amt,pg.mask.length,pg.maskV,hh].join('|');const ck=pg.id+'@'+s;let c=baseCache.get(ck);if(c&&c.k===key)return c;c={k:key,cv:buildBase(pg,s,hh),blur:{},s};baseCache.set(ck,c);return c}
 function getGlass(b,amt){return b.blur[amt]||(b.blur[amt]=blurCv(b.cv,amt*.6*b.s))}
 
 const MC=mk(10,10).getContext('2d');
@@ -500,7 +503,7 @@ function drawBrush(x,el,I){el._w=el.bw;el._h=el.bh;const t=(el.text||'글')+' ';
 function drawEl(x,el,I){x.save();x.translate(el.x,el.y);x.rotate((el.rot||0)*Math.PI/180);
   if(I.anim){const a=I.anim(el);x.globalAlpha=a.al;x.translate(0,a.dy);x.scale(a.sc,a.sc)}
   if(el.type==='text')drawText(x,el,I);else if(el.type==='sticker')drawSticker(x,el,I);else if(el.type==='brush')drawBrush(x,el,I);x.restore()}
-function renderPage(cv,pi,s,o={}){const hh=H(),pg=P.pages[pi],x=cv.getContext('2d');x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,cv.width,cv.height);const b=getBase(pg,s,hh);x.drawImage(b.cv,0,0,cv.width,cv.height);x.setTransform(cv.width/W,0,0,cv.width/W,0,0);
+function renderPage(cv,pi,s,o={}){const hh=H(),pg=P.pages[pi],x=cv.getContext('2d');x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,cv.width,cv.height);const b=o.vsrc?{cv:buildBase(pg,s,hh,o.vsrc),blur:{},s}:getBase(pg,s,hh);x.drawImage(b.cv,0,0,cv.width,cv.height);x.setTransform(cv.width/W,0,0,cv.width/W,0,0);
   const I={s:cv.width/W,h:hh,pi,total:P.pages.length,base:b,anim:o.anim};for(const el of P.globals)drawEl(x,el,I);for(const el of pg.elements)drawEl(x,el,I)}
 function makeAnim(type,t,pi){const els=[...P.globals,...P.pages[pi].elements];return el=>{if(type==='none')return{al:1,dy:0,sc:1};const i=els.indexOf(el);const p=clamp((t-.25-i*.18)/.7,0,1),e=1-Math.pow(1-p,3);
   if(type==='fade')return{al:e,dy:0,sc:1};if(type==='rise')return{al:e,dy:(1-e)*90,sc:1};const q=p-1,b=1+2.70158*q*q*q+1.70158*q*q;return{al:Math.min(1,p*3),dy:0,sc:Math.max(.01,b)}}}
@@ -522,6 +525,10 @@ function layoutStage(){if(!P)return;const wrap=$('#stagewrap'),aw=wrap.clientWid
   cv.width=Math.round(W*RS);cv.height=Math.round(hh*RS);cv.style.width=cw+'px';cv.style.height=ch+'px';stage.style.width=cw+'px';stage.style.height=ch+'px';ov.width=Math.round(cw*DPR);ov.height=Math.round(ch*DPR);ov.style.width=cw+'px';ov.style.height=ch+'px';dirty()}
 new ResizeObserver(()=>layoutStage()).observe($('#stagewrap'));
 let _d=false,_th=false;
+let _vt=0;function vidLoop(){requestAnimationFrame(vidLoop);if(!P)return;const on=$('#editor').classList.contains('on')&&!RECORDING;const pg=on?curPg():null,vid=pg&&pg.video;
+  for(const id in VIDS){const v=VIDS[id];if(vid&&vid.id===id&&!vid.scrub){if(v.paused)v.play().catch(()=>{});if(v.currentTime>=vid.end-.03||v.currentTime<vid.start-.25)v.currentTime=vid.start}else if(!v.paused)v.pause()}
+  if(vid&&VIDS[vid.id]){const now=performance.now();if(now-_vt>33){_vt=now;dirty()}}}
+requestAnimationFrame(vidLoop);
 function dirty(th){if(th)_th=true;if(_d)return;_d=true;requestAnimationFrame(()=>{_d=false;draw()})}
 function draw(){if(!P||!$('#editor').classList.contains('on'))return;renderPage(cv,cur,RS,{anim:ANIM});drawOverlay();placeSel();if(_th){_th=false;schedThumbs()}}
 function drawOverlay(){const x=ov.getContext('2d');x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,ov.width,ov.height);x.setTransform(DPR*K,0,0,DPR*K,0,0);const zs=zones(cur);
@@ -589,7 +596,10 @@ function renderPages(){const w=$('#pages');w.innerHTML='';THUMBS.clear();P.pages
   const add=h('button','padd','＋');add.setAttribute('aria-label','페이지 추가');add.onclick=addPageMenu;w.append(add);if(P.pages.length<4)w.append(h('span','paddl','페이지 추가'));thumbsNow()}
 function thumbsNow(){P.pages.forEach((pg,i)=>{const c=THUMBS.get(pg.id);if(c)renderPage(c,i,110/W)})}
 let _tt;function schedThumbs(){clearTimeout(_tt);_tt=setTimeout(thumbsNow,450)}
-function addPageMenu(){menu('페이지 추가',[['사진으로 추가',async()=>{const fs=await pickFiles('image/*',true);if(!fs.length)return;for(const f of fs){try{P.pages.splice(cur+1,0,newPage(addAsset(await fileToData(f))));cur++}catch(e){toast(e.message)}}afterPages()}],['빈 페이지 추가',()=>{const pg=newPage();P.pages.splice(cur+1,0,pg);cur++;afterPages()}],['지금 페이지 복제',dupPage]])}
+function vidMeta(file){return new Promise((res,rej)=>{const v=document.createElement('video');v.preload='metadata';v.muted=true;const u=URL.createObjectURL(file);v.onloadedmetadata=()=>{const d=v.duration;URL.revokeObjectURL(u);isFinite(d)&&d>0?res(d):rej(new Error('동영상 길이를 읽지 못했어요'))};v.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('이 동영상은 열 수 없어요'))};v.src=u})}
+async function pickVideo(){const fs=await pickFiles('video/*',false);if(!fs.length)return null;const f=fs[0];if(f.size>300e6)toast('영상이 커서 느릴 수 있어요');try{const d=await vidMeta(f);const id='v'+uid();ASSETS[id]=f.slice(0,f.size,f.type||'video/mp4');loadVid(id);return{id,dur:d,start:0,end:Math.min(d,15),sound:true}}catch(e){toast(e.message);return null}}
+async function setPageVideo(pg){const v=await pickVideo();if(!v)return;pg.video=v;pg.fit={scale:1,x:0,y:0};baseCache.clear();commit(true);dirty(true);if(v.dur>15)toast('앞 15초만 골라 두었어요. 동영상 메뉴에서 구간을 바꿔요');if(tool)buildPanel()}
+function addPageMenu(){menu('페이지 추가',[['동영상으로 추가',async()=>{const pg=newPage();P.pages.splice(cur+1,0,pg);cur++;afterPages();await setPageVideo(pg);if(!pg.video){P.pages.splice(cur,1);cur--;afterPages()}else{tab='레이아웃';renderTabs();openTool('video','동영상 자르기')}}],['사진으로 추가',async()=>{const fs=await pickFiles('image/*',true);if(!fs.length)return;for(const f of fs){try{P.pages.splice(cur+1,0,newPage(addAsset(await fileToData(f))));cur++}catch(e){toast(e.message)}}afterPages()}],['빈 페이지 추가',()=>{const pg=newPage();P.pages.splice(cur+1,0,pg);cur++;afterPages()}],['지금 페이지 복제',dupPage]])}
 function afterPages(){selId=null;renderPages();layoutStage();commit(true)}
 function dupPage(){const c=JSON.parse(JSON.stringify(curPg()));c.id=uid();c.elements.forEach(e=>e.id=uid());P.pages.splice(cur+1,0,c);cur++;afterPages();toast('페이지를 복제했어요')}
 async function delPage(){if(P.pages.length<2){toast('마지막 한 장은 지울 수 없어요');return}if(!await askConfirm(`${cur+1}번째 페이지를 지울까요?`,'지우기'))return;P.pages.splice(cur,1);cur=Math.min(cur,P.pages.length-1);afterPages()}
@@ -606,7 +616,7 @@ const TABS={
 '간격':[['자간','⇔','ls'],['행간','⇕','lh'],['위아래','↕','py'],['양옆','⟷','px'],['글 위아래','☰','ty'],['들쑥날쑥','〰','jitter']],
 '배치':[['자리','✥','place'],['회전','↻','rot'],['모든 페이지에','⧉','global'],['페이지 번호','#','pagenum'],['순서','⇅','order']],
 '꾸밈':[['이모티콘','☺','emoji'],['로고·스티커','❏','sticker'],['글 브러시','✍','brush']],
-'레이아웃':[['바탕색','◧','pbg'],['비율','▣','ratio'],['자르기','⌗','crop'],['회전','⟳','prot'],['밝기','☀','bright'],['흐리게','◍','pblur'],['그라데이션','◒','grad'],['가리기','☝','mask'],['글 움직임','✧','motion'],['안전 영역','⬚','safe'],['사진 바꾸기','⧈','photo'],['페이지 복제','⿻','dup'],['페이지 순서','⇄','porder'],['페이지 삭제','✕','pdel']]};
+'레이아웃':[['바탕색','◧','pbg'],['비율','▣','ratio'],['자르기','⌗','crop'],['회전','⟳','prot'],['밝기','☀','bright'],['흐리게','◍','pblur'],['그라데이션','◒','grad'],['가리기','☝','mask'],['글 움직임','✧','motion'],['안전 영역','⬚','safe'],['동영상 자르기','▶','video'],['사진 바꾸기','⧈','photo'],['페이지 복제','⿻','dup'],['페이지 순서','⇄','porder'],['페이지 삭제','✕','pdel']]};
 const NEED_EL=new Set(['content','font','size','color','emph','align','weight','shadow','stroke','bbg','glass','bborder','bw','radius','minw','tail','ls','lh','py','px','ty','jitter','place','rot','global','pagenum','order']);
 const TEXT_ONLY=new Set(['emph','align','bbg','glass','bborder','bw','radius','minw','tail','ls','lh','py','px','ty','jitter','pagenum']);
 const STICKER_OK=new Set(['place','rot','global','order','shadow','size']);
@@ -653,6 +663,7 @@ tail(b,el){if(!el.box.tail)el.box.tail={type:'none',w:1,c:1};const tl=el.box.tai
   const NM={none:'없음',round:'둥근 꼬리',tri:'뾰족 꼬리',curve:'휘어진 꼬리',think:'생각'};
   const w=h('div','tlbtns');Object.keys(IC).forEach(k=>{const bt=h('button','tlb'+(tl.type===k?' on':''));bt.setAttribute('aria-label',NM[k]);bt.innerHTML=`<svg viewBox="0 0 40 31">${IC[k]}</svg>`;bt.onclick=()=>{tl.type=k;if(k!=='none'&&el.box.bgA===0&&el.box.bw===0&&!el.box.glass){el.box.bg='#ffffff';el.box.bgA=1;el.box.radius=Math.max(el.box.radius,200);if(/^#f{3,6}$/i.test(el.color))el.color='#111111';toast('흰 말풍선으로 바꿨어요')}toolLab='말풍선 꼬리'+(k==='none'?'':' · '+NM[k].replace(' 꼬리',''));buildPanel();dirty(true);commit(true)};w.append(bt)});b.append(w);
   if(tl.type==='none'){note(b,'모양을 고르면 꼬리가 생겨요. 흰 점을 끌어 방향과 길이를 바꿔요.');return}
+  b.append(h('div','plab','말풍선 색'));swatches(b,()=>el.box.bgA>0?el.box.bg:'none',v=>{if(v==='none')el.box.bgA=0;else{el.box.bg=v;if(!el.box.bgA)el.box.bgA=1;const n=parseInt(v.slice(1),16),lum=(.299*(n>>16&255)+.587*(n>>8&255)+.114*(n&255));if(!(el.marks||[]).length)el.color=lum<140?'#ffffff':'#111111'}},true);
   const row=h('div','tlrow');b.append(row);slider(row,'굵기',.4,2.5,.1,()=>tl.w||1,v=>tl.w=v,v=>(+v).toFixed(1)+'배');
   const fx=h('button','tlf','↔');fx.setAttribute('aria-label','좌우 뒤집기');fx.onclick=()=>{if(tl.tx!=null)tl.tx=-tl.tx;tl.c=-(tl.c||1);dirty(true);commit(true)};
   const fy=h('button','tlf','↕');fy.setAttribute('aria-label','위아래 뒤집기');fy.onclick=()=>{if(tl.ty!=null)tl.ty=-tl.ty;tl.c=-(tl.c||1);dirty(true);commit(true)};row.append(fx,fy);
@@ -673,6 +684,15 @@ emoji(b){let cat=PANELS._cat||'기호';const tabs=chips(b,Object.keys(EMO).map(k
 sticker(b){btns(b,[['+ 사진에서',async()=>{const fs=await pickFiles('image/*',false);if(!fs.length)return;try{const png=/png|webp|gif/i.test(fs[0].type);const id=addAsset(await fileToData(fs[0],1200,png));const el={id:uid(),type:'sticker',x:W/2,y:H()/2,rot:0,src:id,w:320,shadow:0};curPg().elements.push(el);selId=el.id;commit(true);dirty(true)}catch(e){toast(e.message)}}]]);
   const used=[...new Set([...P.globals,...P.pages.flatMap(p=>p.elements)].filter(e=>e.type==='sticker').map(e=>e.src))];if(used.length){b.append(h('div','prow','이 캐러셀에서 쓴 스티커'));const g=h('div','emogrid');used.forEach(src=>{const x=h('button');const im=h('img');im.src=ASSETS[src];im.style.cssText='width:100%;height:46px;object-fit:contain';x.append(im);x.onclick=()=>{const el={id:uid(),type:'sticker',x:W/2,y:H()/2,rot:0,src,w:320,shadow:0};curPg().elements.push(el);selId=el.id;commit(true);dirty(true)};g.append(x)});b.append(g)}note(b,'로고는 배경이 투명한 PNG가 가장 깔끔해요.')},
 brush(b){const i=h('input','pin');i.placeholder='따라 쓸 글 (비우면 계정 이름)';i.value=BR.text;i.oninput=()=>BR.text=i.value;b.append(i);chips(b,FONTS.map(f=>[f[1],f[0]]),()=>BR.font,v=>BR.font=v,true,true);slider(b,'글자 크기',20,160,1,()=>BR.size,v=>BR.size=v,v=>v+'pt');swatches(b,()=>BR.color,v=>BR.color=v);slider(b,'외곽선',0,10,.5,()=>BR.stroke,v=>BR.stroke=v,v=>v+'pt');note(b,'사진 위를 손가락으로 그으면 글이 선을 따라 반복해서 써져요. 다 그린 뒤 ✕를 누르면 옮기거나 키울 수 있어요.')},
+video(b,el,pg){const v=pg.video;if(!v){note(b,'이 페이지에 동영상을 넣으면 원하는 구간만 잘라 쓸 수 있어요. 인스타 캐러셀엔 최대 60초까지 넣을 수 있어요.');btns(b,[['＋ 동영상 넣기',()=>setPageVideo(pg)]]);return}
+  const f=t=>{t=Math.max(0,t);const m=Math.floor(t/60),ss=(t-m*60).toFixed(1);return m?`${m}:${ss.padStart(4,'0')}`:ss+'초'};
+  const info=h('p','pnote');const upd=()=>info.textContent=`전체 ${f(v.dur)} 중 ${f(v.start)} ~ ${f(v.end)} · 길이 ${(v.end-v.start).toFixed(1)}초`;upd();b.append(info);
+  const seek=t=>{const V=VIDS[v.id];if(V){v.scrub=true;V.pause();V.currentTime=t;clearTimeout(V._sc);V._sc=setTimeout(()=>{v.scrub=false},700)}};
+  let sa,sb;sa=slider(b,'시작',0,Math.max(.1,v.dur-.1),.1,()=>v.start,t=>{v.start=Math.min(t,v.end-.5);if(v.end-v.start>60)v.end=v.start+60;sb.value=v.end;seek(v.start);upd()},t=>f(+t));
+  sb=slider(b,'끝',.1,v.dur,.1,()=>v.end,t=>{v.end=Math.max(t,v.start+.5);if(v.end-v.start>60)v.start=v.end-60;sa.value=v.start;seek(Math.max(v.start,v.end-.05));upd()},t=>f(+t));
+  toggle(b,'소리 넣기',()=>v.sound!==false,x=>v.sound=x,'저장할 때 영상 소리를 함께 넣어요');
+  btns(b,[['▶ 처음부터',()=>{const V=VIDS[v.id];v.scrub=false;if(V)V.currentTime=v.start}],['영상 바꾸기',()=>setPageVideo(pg)],['영상 빼기',async()=>{if(!await askConfirm('이 페이지에서 동영상을 뺄까요?','빼기'))return;pg.video=null;baseCache.clear();commit(true);dirty(true);buildPanel()}]]);
+  note(b,'화면에선 고른 구간이 소리 없이 반복 재생돼요. 위치·확대는 자르기, 밝기·그라데이션도 그대로 쓸 수 있어요. 저장하면 이 페이지는 동영상으로 나와요.')},
 pbg(b,el,pg){swatches(b,()=>pg.bg,v=>pg.bg=v);if(pg.photo)note(b,'사진 페이지라 바탕색은 사진에 가려져요. 사진이 없는 페이지에서 보여요.')},
 ratio(b){chips(b,[['4:5 피드',`4:5`],['1:1',`1:1`],['3:4',`3:4`],['9:16 릴스',`9:16`]],()=>P.ratio,v=>{const o=H();P.ratio=v;const n=H();[...P.globals,...P.pages.flatMap(p=>p.elements)].forEach(e=>e.y=e.y*n/o);baseCache.clear();renderPages();layoutStage()});note(b,'인스타 피드는 4:5가 가장 크게 보여요.')},
 crop(b,el,pg){slider(b,'확대',1,4,.01,()=>pg.fit.scale,v=>pg.fit.scale=v,v=>(+v).toFixed(2)+'배');btns(b,[['원래대로',()=>{pg.fit={scale:1,x:0,y:0};dirty(true);commit(true);buildPanel()}]])},
@@ -695,10 +715,22 @@ async function addFontFace(name,buf){const ff=new FontFace(name,buf);await ff.lo
 
 /* 글 움직임 */
 function preview(pi){if(P.pages[pi].motion==='none'){toast('먼저 움직임을 골라요');return}const t0=performance.now();const f=()=>{const t=(performance.now()-t0)/1000;ANIM=makeAnim(P.pages[pi].motion,t,pi);dirty();if(t<4)requestAnimationFrame(f);else{ANIM=null;dirty()}};f()}
-async function recordPage(pi){const hh=H(),c=mk(W,hh);if(!c.captureStream||!window.MediaRecorder)throw new Error('이 기기에선 동영상 만들기가 안 돼요');const types=['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm'];const mt=types.find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t));
-  renderPage(c,pi,1);const st=c.captureStream(30);const rec=new MediaRecorder(st,mt?{mimeType:mt,videoBitsPerSecond:8e6}:{});const ch=[];rec.ondataavailable=e=>{if(e.data&&e.data.size)ch.push(e.data)};const done=new Promise(r=>rec.onstop=r);rec.start(200);const t0=performance.now();
-  await new Promise(res=>{const f=()=>{const t=(performance.now()-t0)/1000;renderPage(c,pi,1,{anim:makeAnim(P.pages[pi].motion,t,pi)});if(t<4.2)requestAnimationFrame(f);else res()};f()});rec.stop();await done;const type=(mt||'video/webm').split(';')[0];return new File([new Blob(ch,{type})],`카드_${String(pi+1).padStart(2,'0')}.${type.includes('mp4')?'mp4':'webm'}`,{type})}
-async function saveVideo(pi){if(P.pages[pi].motion==='none'){toast('먼저 움직임을 골라요');return}toast('동영상을 만드는 중이에요 · 4초');try{const f=await recordPage(pi);openExportWith([f],'동영상이 만들어졌어요')}catch(e){toast(e.message)}}
+async function recordPage(pi,R){const hh=H(),c=mk(W,hh),pg=P.pages[pi],vid=pg.video;if(!c.captureStream||!window.MediaRecorder)throw new Error('이 기기에선 동영상 만들기가 안 돼요');const types=['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm'];const mt=types.find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t));
+  RECORDING=true;try{let st,ac=null;const dur=vid?vid.end-vid.start:4.2;
+  if(vid){R=R||makeRecEl(vid);R.pause();await seekTo(R,vid.start);renderPage(c,pi,1,{vsrc:R});st=c.captureStream(30);
+    if(vid.sound!==false){try{ac=getAC();if(!R._src){R._src=ac.createMediaElementSource(R)}const d=ac.createMediaStreamDestination();R._src.connect(d);R._dst=d;d.stream.getAudioTracks().forEach(t=>st.addTrack(t))}catch(e){}}}
+  else{renderPage(c,pi,1);st=c.captureStream(30)}
+  const rec=new MediaRecorder(st,mt?{mimeType:mt,videoBitsPerSecond:8e6}:{});const ch=[];rec.ondataavailable=e=>{if(e.data&&e.data.size)ch.push(e.data)};const done=new Promise(r=>rec.onstop=r);
+  if(vid){R.muted=vid.sound===false;try{await R.play()}catch(e){R.muted=true;await R.play().catch(()=>{});if(vid.sound!==false)toast('소리 없이 만들어요')}}
+  rec.start(200);const t0=performance.now();
+  await new Promise(res=>{const f=()=>{const t=(performance.now()-t0)/1000;renderPage(c,pi,1,{anim:pg.motion!=='none'?makeAnim(pg.motion,t,pi):null,vsrc:vid?R:undefined});const end=vid?(R.currentTime>=vid.end-.02||R.ended||t>dur+2):t>=dur;if(!end)requestAnimationFrame(f);else res()};f()});
+  rec.stop();await done;if(R){R.pause();if(R._dst){try{R._src.disconnect()}catch(e){}R._dst=null}}
+const type=(mt||'video/webm').split(';')[0];return new File([new Blob(ch,{type})],`카드_${String(pi+1).padStart(2,'0')}.${type.includes('mp4')?'mp4':'webm'}`,{type})}finally{RECORDING=false}}
+let AC=null;function getAC(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;AC=new C()}if(AC.state==='suspended')AC.resume().catch(()=>{});return AC}
+const RECEL={};function makeRecEl(vid){let R=RECEL[vid.id];if(R)return R;R=document.createElement('video');R.playsInline=true;R.setAttribute('playsinline','');R.preload='auto';R.src=VURL[vid.id];R.style.cssText='position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none';document.body.appendChild(R);RECEL[vid.id]=R;return R}
+function seekTo(R,t){return new Promise(res=>{const go=()=>{if(Math.abs(R.currentTime-t)<.02&&R.readyState>=2)return res();const k=()=>{R.removeEventListener('seeked',k);res()};R.addEventListener('seeked',k);R.currentTime=t;setTimeout(res,3000)};if(R.readyState>=1)go();else R.addEventListener('loadedmetadata',go,{once:true})})}
+function unlockRec(){const vs=P.pages.filter(p=>p.video&&VURL[p.video.id]);if(!vs.length)return;try{getAC()}catch(e){}vs.forEach(p=>{const R=makeRecEl(p.video);R.muted=false;const q=R.play();if(q)q.then(()=>R.pause()).catch(()=>{})})}
+async function saveVideo(pi){if(P.pages[pi].motion==='none'&&!P.pages[pi].video){toast('먼저 움직임을 골라요');return}unlockRec();toast('동영상을 만드는 중이에요 · 4초');try{const f=await recordPage(pi);openExportWith([f],'동영상이 만들어졌어요')}catch(e){toast(e.message)}}
 
 /* ============ 찾아보기 ============ */
 let brTab='style';
@@ -733,15 +765,15 @@ function renderFeed(){const tb=$('#fdTabs'),bd=$('#fdBody');tb.innerHTML='';[['p
 /* ============ 저장 ============ */
 $('#bSave').onclick=()=>openExport();$('#bShare').onclick=()=>openExport();
 $('#xpClose').onclick=()=>$('#xport').classList.remove('on');
-async function renderAll(){const out=[];for(let i=0;i<P.pages.length;i++){const c=mk(W,H());renderPage(c,i,1);const b=await new Promise(r=>c.toBlob(r,'image/jpeg',.95));out.push(new File([b],`카드_${String(i+1).padStart(2,'0')}.jpg`,{type:'image/jpeg'}))}return out}
-async function openExport(){const bd=$('#xpBody');bd.innerHTML='';bd.append(h('p','fnote','이미지를 만드는 중이에요…'));$('#xport').classList.add('on');await new Promise(r=>setTimeout(r,30));const files=await renderAll();showExport(files,`${files.length}장을 만들었어요`)}
+async function renderAll(prog){const out=[];for(let i=0;i<P.pages.length;i++){const pv=P.pages[i].video;if(pv&&VURL[pv.id]){if(prog)prog(`${i+1}번째 페이지 동영상을 만드는 중이에요 · ${(pv.end-pv.start).toFixed(1)}초`);try{out.push(await recordPage(i));continue}catch(e){toast(e.message)}}const c=mk(W,H());renderPage(c,i,1);const b=await new Promise(r=>c.toBlob(r,'image/jpeg',.95));out.push(new File([b],`카드_${String(i+1).padStart(2,'0')}.jpg`,{type:'image/jpeg'}))}return out}
+async function openExport(){unlockRec();const bd=$('#xpBody');bd.innerHTML='';const pm=h('p','fnote','이미지를 만드는 중이에요…');bd.append(pm);$('#xport').classList.add('on');await new Promise(r=>setTimeout(r,30));const files=await renderAll(t=>pm.textContent=t);showExport(files,`${files.length}장을 만들었어요`)}
 function openExportWith(files,msg){$('#xport').classList.add('on');showExport(files,msg)}
 function showExport(files,msg){const bd=$('#xpBody');bd.innerHTML='';bd.append(h('p','fnote',msg+' · 1080px'));const g=h('div','xgrid');files.forEach(f=>{const u=URL.createObjectURL(f);if(f.type.startsWith('video')){const v=h('video');v.src=u;v.controls=true;v.playsInline=true;v.style.width='100%';v.style.borderRadius='10px';g.append(v)}else{const im=h('img');im.src=u;im.alt=f.name;g.append(im)}});bd.append(g);
   const canShare=!!(navigator.canShare&&(()=>{try{return navigator.canShare({files})}catch(e){return false}})());
   if(canShare){const s=h('button','bigbtn','사진 앱에 한 번에 저장하기');s.onclick=async()=>{try{await navigator.share({files})}catch(e){if(e.name!=='AbortError')toast('공유 창을 열지 못했어요. 아래 파일로 받기를 써 보세요')}};bd.append(s)}
   const d=h('button','bigbtn'+(canShare?' light':''),files.length>1?`파일로 받기 (${files.length}개)`:'파일로 받기');d.onclick=()=>saveFiles(files);bd.append(d);
   note2(bd,canShare?'공유 창에서 "이미지 저장"을 누르면 사진 앱에 순서대로 들어가요.':'이미지를 길게 눌러 "사진 앱에 저장"해도 돼요.');
-  const mv=P.pages.map((p,i)=>[p,i]).filter(([p])=>p.motion!=='none');if(mv.length&&files[0].type.startsWith('image')){note2(bd,'움직임을 넣은 페이지는 동영상으로도 받을 수 있어요.');mv.forEach(([p,i])=>{const b=h('button','bigbtn light',`${i+1}번째 페이지 동영상 만들기`);b.onclick=()=>saveVideo(i);bd.append(b)})}}
+  const mv=P.pages.map((p,i)=>[p,i]).filter(([p])=>p.motion!=='none'&&!p.video);if(mv.length&&files[0].type.startsWith('image')){note2(bd,'움직임을 넣은 페이지는 동영상으로도 받을 수 있어요.');mv.forEach(([p,i])=>{const b=h('button','bigbtn light',`${i+1}번째 페이지 동영상 만들기`);b.onclick=()=>saveVideo(i);bd.append(b)})}}
 
 let _dl;function getDL(){if(_dl!==undefined)return Promise.resolve(_dl);if(!(window.claude&&window.claude.use))return Promise.resolve(_dl=null);return window.claude.use('downloads').then(x=>_dl=x||null).catch(()=>_dl=null)}
 async function saveFiles(files){const dl=await getDL();if(!dl){for(const f of files){const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();a.remove();await new Promise(r=>setTimeout(r,450))}return}
@@ -751,7 +783,7 @@ let DB=null;
 function idb(){return new Promise((res,rej)=>{if(DB)return res(DB);if(!window.indexedDB)return rej(new Error('no idb'));const r=indexedDB.open('hanjang',1);r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore('projects',{keyPath:'id'});d.createObjectStore('fonts',{keyPath:'name'})};r.onsuccess=()=>{DB=r.result;res(DB)};r.onerror=()=>rej(r.error)})}
 function tx(store,mode,fn){return idb().then(d=>new Promise((res,rej)=>{const t=d.transaction(store,mode),s=t.objectStore(store),q=fn(s);t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error)}))}
 let _sv;function scheduleSave(){clearTimeout(_sv);_sv=setTimeout(saveProject,900)}
-async function saveProject(){if(!P)return;try{const used=new Set();P.pages.forEach(p=>{if(p.photo)used.add(p.photo);p.elements.forEach(e=>e.src&&used.add(e.src))});P.globals.forEach(e=>e.src&&used.add(e.src));const assets={};used.forEach(id=>{if(ASSETS[id])assets[id]=ASSETS[id]});
+async function saveProject(){if(!P)return;try{const used=new Set();P.pages.forEach(p=>{if(p.photo)used.add(p.photo);if(p.video)used.add(p.video.id);p.elements.forEach(e=>e.src&&used.add(e.src))});P.globals.forEach(e=>e.src&&used.add(e.src));const assets={};used.forEach(id=>{if(ASSETS[id])assets[id]=ASSETS[id]});
   const c=mk(W*.16,H()*.16);renderPage(c,0,.16);const rec={id:P.id,updated:Date.now(),count:P.pages.length,thumb:c.toDataURL('image/jpeg',.7),data:JSON.parse(snap()),assets};await tx('projects','readwrite',s=>s.put(rec))}catch(e){if(!saveProject._w){saveProject._w=1;toast('이 브라우저에선 이어하기 저장이 안 돼요')}}}
 function ago(t){const s=(Date.now()-t)/1000;if(s<60)return Math.max(1,Math.round(s))+'초 전';if(s<3600)return Math.round(s/60)+'분 전';if(s<86400)return Math.round(s/3600)+'시간 전';return Math.round(s/86400)+'일 전'}
 async function renderHome(){const box=$('#hResume');box.innerHTML='';let list=[];try{list=await tx('projects','readonly',s=>s.getAll())||[]}catch(e){}
