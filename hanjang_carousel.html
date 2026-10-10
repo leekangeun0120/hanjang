@@ -342,6 +342,11 @@ const STY=[
 ['제목','라임 글 검정 외곽선',{font:'Black Han Sans',size:72,weight:400,color:'#dcff5c',stroke:7,strokeColor:'#111111'}],
 ['제목','민트 둥근 제목',{font:'Jua',size:74,weight:400,color:'#7ff0c7',shadow:30}],
 ['제목','민트 둥근 소제목',{font:'Jua',size:48,weight:400,color:'#a8f5d8'}],
+['제목','연핑크 글',{size:64,weight:800,color:'#ffb3cf',shadow:30}],
+['제목','얇은 민트 글',{size:60,weight:300,color:'#a8f5d8',shadow:15}],
+['제목','민트 굵은 글',{size:64,weight:800,color:'#8ef0c4',shadow:25}],
+['제목','검정판 노랑 글',{size:56,weight:800,color:'#f7f27a',box:{bg:'#111111',bgA:1},sp:{px:22,py:10}}],
+['제목','흰 판 명조',{font:'Nanum Myeongjo',size:52,weight:400,color:'#111111',box:{bg:'#ffffff',bgA:1},sp:{px:26,py:14,ls:4}}],
 ['제목','잠금화면 시계',{size:150,weight:600,shadow:20,sp:{ls:-2},text:'12:49'}],
 ['라벨','노랑 라벨',{size:42,weight:500,color:'#111111',box:{bg:'#fff3a3',bgA:1},sp:{px:18,py:8}}],
 ['라벨','하늘 라벨',{size:42,weight:500,color:'#111111',box:{bg:'#bfe0ff',bgA:1},sp:{px:18,py:8}}],
@@ -360,9 +365,17 @@ const STY=[
 ['라벨','체크 항목',{size:40,weight:500,color:'#f2f2f2',box:{bg:'#3a3a3a',bgA:.9,radius:12},sp:{px:20,py:10},text:'✓ 체크 항목'}],
 ['라벨','작은 핑크 라벨',{size:34,weight:500,color:'#111111',box:{bg:'#ffd9e8',bgA:1},sp:{px:14,py:6}}],
 ['라벨','핀 위치',{size:40,weight:800,shadow:40,text:'📍 장소 이름'}],
+['라벨','진회색 라벨',{size:40,weight:500,color:'#e8e8e8',box:{bg:'#444444',bgA:1},sp:{px:18,py:8}}],
+['라벨','모카 캡슐',{size:40,weight:800,color:'#fff4dc',box:{bg:'#8a6a45',bgA:1,radius:200},sp:{px:26,py:10}}],
+['라벨','검정 캡슐',{size:40,weight:500,box:{bg:'#111111',bgA:1,radius:200},sp:{px:26,py:10}}],
+['라벨','크림 라벨',{size:42,weight:500,color:'#222222',box:{bg:'#fff6cf',bgA:1},sp:{px:20,py:12}}],
+['라벨','반투명 회색판',{size:42,weight:800,box:{bg:'#ffffff',bgA:.25},sp:{px:20,py:12}}],
 ['라벨','DM 말풍선',{size:34,weight:500,box:{bg:'#23338c',bgA:1,radius:40},sp:{px:24,py:12},text:'질문을 적어요.'}],
 ['말풍선·판','말풍선',{size:42,weight:500,color:'#111111',box:{bg:'#ffffff',bgA:1,bw:3,border:'#111111',radius:200},sp:{px:28,py:12}}],
 ['말풍선·판','꼬리 말풍선',{size:42,weight:500,color:'#111111',box:{bg:'#ffffff',bgA:1,radius:200,tail:{type:'round',w:1,c:1}},sp:{px:30,py:14}}],
+['말풍선·판','채팅 말풍선',{size:40,weight:500,color:'#111111',box:{bg:'#ffffff',bgA:1,radius:44,tail:{type:'chat',w:1,c:1,rx:-1.03,ry:1.08}},sp:{px:30,py:14}}],
+['말풍선·판','파랑 채팅 말풍선',{size:40,weight:500,box:{bg:'#3b6cff',bgA:1,radius:44,tail:{type:'chat',w:1,c:1,rx:1.03,ry:1.08}},sp:{px:30,py:14}}],
+['말풍선·판','만화 말풍선',{size:44,weight:800,color:'#111111',box:{bg:'#ffffff',bgA:1,bw:4,border:'#111111',radius:200,tail:{type:'tri',w:.9,c:1,rx:-.4,ry:2.6}},sp:{px:30,py:14}}],
 ['말풍선·판','생각 말풍선',{size:40,weight:500,color:'#111111',box:{bg:'#ffffff',bgA:1,radius:200,tail:{type:'think',w:1,c:1}},sp:{px:30,py:14}}],
 ['말풍선·판','반투명 검정판',{size:42,weight:500,box:{bg:'#000000',bgA:.55,radius:16},sp:{px:26,py:12}}],
 ['말풍선·판','반투명 흰판',{size:42,weight:500,color:'#333333',box:{bg:'#ffffff',bgA:.78,radius:16},sp:{px:26,py:12}}],
@@ -393,6 +406,11 @@ const PRE=[
 {name:'메모지',pages:[[['흰 본문','오늘의 기록',.5,.3],['노랑 라벨','잊지 말 것',.5,.4],ACC],[['노랑 라벨','본문을 적어요.',.5,.4],['흰 라벨','2026. 여름',.5,.75,{font:'Gowun Batang',size:30,weight:400}],PN],[['흰 본문','또 올게요',.5,.42],ACC]]},
 {name:'레트로',pages:[[['레트로 세리프','여름의 레코드',.5,.4],['민트 라벨','여행 꿀팁',.5,.47],ACC],[['라임 라벨','저장 필수',.5,.2],['명조 본문','본문을 적어요.',.5,.48],PN],[['레트로 세리프','다음 편에서',.5,.45,{size:48}],ACC]]},
 {name:'Q&A',pages:[[['번호 뱃지','Q. 이런 고민 있나요?',.5,.4,{size:36}],['흰 본문','답은 여기에',.5,.48,{weight:700}],ACC],[['번호 뱃지','Q. 질문을 적어요',.5,.3,{size:32}],['말풍선','A. 답을 적어요',.5,.55,{size:34}],PN],[['말풍선','더 궁금하면 댓글!',.5,.45],ACC]]},
+{name:'한 줄씩 상자',pages:[[['하늘 테두리 라벨','첫 인사 한 줄',.45,.12,{size:36}],['하늘 테두리 라벨','♡',.72,.17,{size:30}],ACC],[['하늘 테두리 라벨','한 줄씩 끊어서 적으면 읽기 편해요',.5,.1,{size:30}],['하늘 테두리 라벨','두 번째 줄은 따로 상자로',.5,.15,{size:30}],PN],[['하늘 테두리 라벨','다음 편도 기대해 주세요',.5,.12,{size:32}],ACC]]},
+{name:'왼쪽 아래 제목',pages:[[['흰 굵은 제목','첫 줄 제목',0,.71,{size:56,left:.06}],['연핑크 글','포인트 한 줄',0,.765,{size:56,left:.06}],['작은 출처','| 짧은 소개 한 줄',0,.815,{size:24,left:.06}]],[['작은 출처','시리즈 이름',0,.07,{size:22,left:.06}],['흰 본문','본문을 적어요.\n두세 문장이 알맞아요.',0,.45,{align:'left',left:.06}],PN],[['흰 굵은 제목','여기까지',0,.7,{size:56,left:.06}],['연핑크 글','다음에 또 봐요',0,.755,{size:56,left:.06}],ACC]]},
+{name:'채팅 대화',pages:[[['채팅 말풍선','이거 봤어?',.3,.12,{size:32}],['파랑 채팅 말풍선','나도 가고 싶다',.66,.24,{size:32}],['흰 굵은 제목','오늘의 한 장',.5,.85,{size:60}]],[['채팅 말풍선','한마디 더',.32,.12,{size:32}],['흰 본문','본문을 적어요.\n두세 문장이 알맞아요.',.5,.5],PN],[['파랑 채팅 말풍선','다음에 또 봐요',.4,.42,{size:32}],ACC]]},
+{name:'흰 판 포인트',pages:[[['흰 라벨','첫 인사',.5,.12,{size:34}],['흰 판 굵은 글','{ 왜 }',.5,.18,{size:36}],['흰 판 라임 글','딱 한 장이면 돼요',.5,.24,{size:44}],ACC],[['흰 본문','첫째 : 이렇게\n둘째 : 저렇게',.5,.84,{weight:700,size:38}],PN],[['흰 판 핑크 글','다음 편도',.5,.4,{size:44}],['흰 라벨','팔로우하고 받아 보세요',.5,.46,{size:30}],ACC]]},
+{name:'스크랩북 팁',pages:[[['모카 캡슐','1편 #오늘의기록',0,.42,{size:28,left:.07}],['검정판 제목','첫째 줄 제목',0,.48,{size:44,left:.07}],['검정판 제목','둘째 줄 제목',0,.535,{size:44,left:.07}],['검정판 제목','셋째 줄',0,.59,{size:44,left:.07}]],[['흰 라벨','여기 진짜 좋았어요\n또 가고 싶다',.72,.1,{size:26,align:'left',sp:{lh:1.4}}],['모카 캡슐','팁',0,.56,{size:24,left:.07}],['하늘 라벨','◎ 첫 번째 팁',0,.61,{size:32,weight:800,left:.07}],['흰 라벨','짧게 설명을 적어요.\n두 줄이면 충분해요.',0,.68,{size:24,align:'left',sp:{lh:1.4},left:.07}]],[['모카 캡슐','팁',0,.4,{size:24,left:.07}],['하늘 라벨','◎ 두 번째 팁',0,.45,{size:32,weight:800,left:.07}],['흰 라벨','짧게 설명을 적어요.',0,.5,{size:24,left:.07}],ACC]]},
 {name:'비포·애프터',pages:[[['번호 뱃지','BEFORE',.16,.07,{size:28}],['흰 본문','이렇게 달라졌어요',.5,.5,{weight:700}],['파랑 캡슐','AFTER',.84,.93,{size:28}]]]},
 {name:'이벤트 안내',pages:[[['빨강 알림','EVENT',.5,.32,{size:36}],['흰 굵은 제목','댓글 달면',.5,.4,{size:48}],['하늘 라벨','10.1 — 10.15',.5,.48],['파랑 캡슐','참여하기',.5,.55],ACC]]},
 {name:'문구 여행',pages:[[['민트 둥근 소제목','나혼자',.8,.07,{size:36}],['민트 둥근 제목','고삐',.8,.13,{size:54}],['민트 둥근 소제목','|',.8,.18,{size:30}],['민트 둥근 소제목','문구여행',.8,.23,{size:36}]],[['작은 출처','12:49',.12,.05,{size:28}],['핀 위치','📍 인천공항 2터미널',.3,.1,{size:34}],['흰 본문','문구 집중공략 여행!',.5,.2,{size:36,weight:700}],['유리 캡션','프레젠더스 노트(베스트셀러)',.6,.93,{size:40}]],[['민트 둥근 제목','문구여행 끝',.5,.42,{size:52}],['흰 본문','다음 편에서 만나요',.5,.5,{size:34}],ACC]]},
@@ -400,9 +418,11 @@ const PRE=[
 {name:'크리에이터 썸네일',grad:{type:'black',amt:.8},pages:[[['빨강 알림','NEW',.12,.07,{size:34}],['흰 캡슐','{@}',.82,.07,{size:28}],['흰 글 검정 외곽선','눈길 끄는 큰 제목',.5,.72,{size:84,weight:900}],['라임 글 검정 외곽선','강조할 한 마디',.5,.81,{size:76}],['노랑 형광 제목','EP.01',.5,.89,{size:40}]]]},
 {name:'인용구 한 장',bg:'#2a2a2c',grad:{type:'black',amt:.75},pages:[[['명조 제목','“',.5,.34,{size:150}],['인용구','마음에 남은 문장을\n여기에 적어요',.5,.47,{size:50}],['작은 출처','— 이름, 책 제목',.5,.58,{size:30}],['흰 캡슐','{@}',.5,.93,{size:28}]]]},
 {name:'DM 한 장',bg:'#2f2f31',grad:{type:'black',amt:.7},pages:[[['DM 말풍선','질문을 적어요.',.62,.3],['DM 말풍선','답',.22,.4]]]},
+{name:'팔로우 카드',pages:[[['라임 글 검정 외곽선','매일 한 장,\n같이 만들어요',.5,.22,{size:74,stroke:0,sp:{lh:1.25}}],['흰 캡슐','{@}',.5,.53,{size:30,color:'#111111',box:{bg:'#ffffff',bgA:1,radius:200,minOn:true,minPct:72},sp:{px:40,py:30},align:'left'}],['파랑 캡슐','팔로우',.77,.53,{size:26}],['흰 본문','어떤 글을 올리는 계정인지 한 줄\n새 글을 가장 먼저 받아 보세요',.5,.66,{size:26,sp:{lh:1.5}}]]]},
+{name:'질문 스티커',pages:[[['검정판 제목','무엇이든 물어보세요!',.5,.36,{size:30,weight:500,box:{minOn:true,minPct:76},sp:{px:20,py:22}}],['흰 판 굵은 글','질문을 여기에 적어요',.5,.43,{size:32,weight:500,box:{minOn:true,minPct:76},sp:{px:20,py:44}}],['검정판 노랑 글','답을 적어요!',.5,.53,{size:40,color:'#dcff5c'}],ACC]]},
 {name:'자기소개',pages:[[['흰 캡슐','{@}',.5,.36,{size:30}],['흰 굵은 제목','안녕하세요',.5,.43,{size:48}],['흰 본문','무엇을 올리는 계정인지 한 줄',.5,.5,{size:34}]]]}
 ];
-function specToEl(sp,hh){const st=styleBy(sp[0]);const e=styled(st[2],sp[1]);if(sp[1]==='{n}'){e.dyn='pagenum';e.text='1/N'}if(sp[1]==='{@}'){e.dyn='account';e.text='@계정'}e.x=sp[2]*W;e.y=sp[3]*hh;if(sp[4])applyStyle(e,sp[4]);return e}
+function specToEl(sp,hh){const st=styleBy(sp[0]);const e=styled(st[2],sp[1]);if(sp[1]==='{n}'){e.dyn='pagenum';e.text='1/N'}if(sp[1]==='{@}'){e.dyn='account';e.text='@계정'}e.x=sp[2]*W;e.y=sp[3]*hh;if(sp[4])applyStyle(e,sp[4]);if(e.left!=null){const L=layoutText(e,{pi:0,total:3});e.x=e.left*W+L.bw/2;delete e.left}return e}
 
 /* ============ 이모티콘 ============ */
 const EMO={
@@ -465,8 +485,12 @@ function layoutText(el,I){const t=txtOf(el,I),sz=el.size,ls=el.sp.ls/100*sz,line
   const lh=sz*el.sp.lh,th=lh*(lines.length-1)+sz;let bw=maxW+el.sp.px*2;if(el.box.minOn)bw=Math.max(bw,W*el.box.minPct/100);return{lines,bw,bh:th+el.sp.py*2,th,lh,ls,sz,t}}
 function setSh(x,el,I){const a=el.shadow/100;x.shadowColor=`rgba(0,0,0,${.25+a*.6})`;x.shadowBlur=el.size*(.06+a*.3)*I.s;x.shadowOffsetY=el.size*.05*a*I.s}
 function clrSh(x){x.shadowColor='transparent';x.shadowBlur=0;x.shadowOffsetY=0}
-function tailTip(tl,w,hh,sz){if(tl.tx==null){tl.tx=-w*.22;tl.ty=hh/2+sz*.95}if(Math.abs(tl.tx)<w/2+4&&Math.abs(tl.ty)<hh/2+4){if(Math.abs(tl.ty)/(hh/2)>=Math.abs(tl.tx)/(w/2))tl.ty=(tl.ty<0?-1:1)*(hh/2+sz*.4);else tl.tx=(tl.tx<0?-1:1)*(w/2+sz*.4)}return[tl.tx,tl.ty]}
-function bubblePath(x,X0,Y0,w,hh,r,tl,sz){const T=tl&&tl.type!=='none'&&tl.type!=='think'?[tl.tx,tl.ty]:null;if(!T){rr(x,X0,Y0,w,hh,r);return}
+function tailTip(tl,w,hh,sz){if(tl.tx==null){tl.tx=tl.rx!=null?tl.rx*w/2:-w*.22;tl.ty=tl.ry!=null?tl.ry*hh/2:hh/2+sz*.95}if(Math.abs(tl.tx)<w/2+4&&Math.abs(tl.ty)<hh/2+4){if(Math.abs(tl.ty)/(hh/2)>=Math.abs(tl.tx)/(w/2))tl.ty=(tl.ty<0?-1:1)*(hh/2+sz*.4);else tl.tx=(tl.tx<0?-1:1)*(w/2+sz*.4)}return[tl.tx,tl.ty]}
+function chatPath(x,X0,Y0,w,hh,r,tl,sz){r=Math.max(0,Math.min(r,w/2,hh/2));const cx=X0+w/2,cy=Y0+hh/2,fx=tl.tx<cx?1:-1,fy=tl.ty>cy?1:-1;x.save();x.translate(cx,cy);x.scale(fx,fy);
+  const L=-w/2,R=w/2,Tp=-hh/2,Bt=hh/2,k=Math.max(r,Math.min(hh/2,w/2,sz*.6)),T=[(tl.tx-cx)*fx,(tl.ty-cy)*fy],sw=1+((tl.w||1)-1)*.7;
+  x.beginPath();x.moveTo(L+r,Tp);x.lineTo(R-r,Tp);x.quadraticCurveTo(R,Tp,R,Tp+r);x.lineTo(R,Bt-r);x.quadraticCurveTo(R,Bt,R-r,Bt);
+  x.lineTo(Math.min(R-r,L+k*sw),Bt);x.quadraticCurveTo(L+k*.3,Bt,T[0],T[1]);x.quadraticCurveTo(L,Bt-k*.05,L,Bt-k);x.lineTo(L,Tp+r);x.quadraticCurveTo(L,Tp,L+r,Tp);x.closePath();x.restore()}
+function bubblePath(x,X0,Y0,w,hh,r,tl,sz){if(tl&&tl.type==='chat'){chatPath(x,X0,Y0,w,hh,r,tl,sz);return}const T=tl&&tl.type!=='none'&&tl.type!=='think'?[tl.tx,tl.ty]:null;if(!T){rr(x,X0,Y0,w,hh,r);return}
   r=Math.max(0,Math.min(r,w/2,hh/2));const L=X0,R=X0+w,Tp=Y0,Bt=Y0+hh,cx=X0+w/2,cy=Y0+hh/2;let vert=Math.abs(T[1]-cy)/(hh/2)>=Math.abs(T[0]-cx)/(w/2);const want=Math.min(sz*.3*(tl.w||1),hh*.34);if(vert&&w-2*r<2*want+2)r=Math.max(0,(w-2*want-2)/2);if(!vert&&hh-2*r<2*want+2)r=Math.max(0,(hh-2*want-2)/2);
   const avail=vert?w-2*r:hh-2*r,bh=Math.max(2,Math.min(want,avail/2-1));const edge=vert?(T[1]<cy?'t':'b'):(T[0]<cx?'l':'r');
   const c=vert?clamp(cx+(T[0]-cx)*.55,L+r+bh,R-r-bh):clamp(cy+(T[1]-cy)*.55,Tp+r+bh,Bt-r-bh);
@@ -659,8 +683,8 @@ bborder(b,el){swatches(b,()=>el.box.bw>0?el.box.border:'none',v=>{if(v==='none')
 bw(b,el){slider(b,'두께',0,16,.5,()=>el.box.bw,v=>el.box.bw=v,v=>v+'pt')},
 radius(b,el){slider(b,'둥글기',0,200,1,()=>el.box.radius,v=>el.box.radius=v,v=>v+'pt');note(b,'끝까지 올리면 캡슐 모양이 돼요.')},
 tail(b,el){if(!el.box.tail)el.box.tail={type:'none',w:1,c:1};const tl=el.box.tail;
-  const IC={none:'<rect x="4" y="9" width="32" height="13" rx="6.5"/>',round:'<path d="M9 4h22a6 6 0 0 1 6 6v3a6 6 0 0 1-6 6H20q-3 4-7 8q2-4 1-8H9a6 6 0 0 1-6-6v-3a6 6 0 0 1 6-6z"/>',tri:'<path d="M9 4h22a6 6 0 0 1 6 6v3a6 6 0 0 1-6 6H22l-6 9l-1-9H9a6 6 0 0 1-6-6v-3a6 6 0 0 1 6-6z"/>',curve:'<path d="M10 4h22a6 6 0 0 1 6 6v3a6 6 0 0 1-6 6H16q-5 6-13 7q6-3 6-8a6 6 0 0 1-2-5v-3a6 6 0 0 1 6-6z"/>',think:'<rect x="6" y="2" width="28" height="14" rx="7"/><circle cx="15" cy="20" r="3"/><circle cx="12" cy="25" r="2"/><circle cx="10" cy="29" r="1.4"/>'};
-  const NM={none:'없음',round:'둥근 꼬리',tri:'뾰족 꼬리',curve:'휘어진 꼬리',think:'생각'};
+  const IC={none:'<rect x="4" y="9" width="32" height="13" rx="6.5"/>',chat:'<path d="M10 4h20a7 7 0 0 1 7 7v1a7 7 0 0 1-7 7H11q-3 4-8 4q3-2 3-6a7 7 0 0 1-3-5v-1a7 7 0 0 1 7-7z"/>',round:'<path d="M9 4h22a6 6 0 0 1 6 6v3a6 6 0 0 1-6 6H20q-3 4-7 8q2-4 1-8H9a6 6 0 0 1-6-6v-3a6 6 0 0 1 6-6z"/>',tri:'<path d="M9 4h22a6 6 0 0 1 6 6v3a6 6 0 0 1-6 6H22l-6 9l-1-9H9a6 6 0 0 1-6-6v-3a6 6 0 0 1 6-6z"/>',curve:'<path d="M10 4h22a6 6 0 0 1 6 6v3a6 6 0 0 1-6 6H16q-5 6-13 7q6-3 6-8a6 6 0 0 1-2-5v-3a6 6 0 0 1 6-6z"/>',think:'<rect x="6" y="2" width="28" height="14" rx="7"/><circle cx="15" cy="20" r="3"/><circle cx="12" cy="25" r="2"/><circle cx="10" cy="29" r="1.4"/>'};
+  const NM={none:'없음',chat:'채팅 꼬리',round:'둥근 꼬리',tri:'뾰족 꼬리',curve:'휘어진 꼬리',think:'생각'};
   const w=h('div','tlbtns');Object.keys(IC).forEach(k=>{const bt=h('button','tlb'+(tl.type===k?' on':''));bt.setAttribute('aria-label',NM[k]);bt.innerHTML=`<svg viewBox="0 0 40 31">${IC[k]}</svg>`;bt.onclick=()=>{tl.type=k;if(k!=='none'&&el.box.bgA===0&&el.box.bw===0&&!el.box.glass){el.box.bg='#ffffff';el.box.bgA=1;el.box.radius=Math.max(el.box.radius,200);if(/^#f{3,6}$/i.test(el.color))el.color='#111111';toast('흰 말풍선으로 바꿨어요')}toolLab='말풍선 꼬리'+(k==='none'?'':' · '+NM[k].replace(' 꼬리',''));buildPanel();dirty(true);commit(true)};w.append(bt)});b.append(w);
   if(tl.type==='none'){note(b,'모양을 고르면 꼬리가 생겨요. 흰 점을 끌어 방향과 길이를 바꿔요.');return}
   b.append(h('div','plab','말풍선 색'));swatches(b,()=>el.box.bgA>0?el.box.bg:'none',v=>{if(v==='none')el.box.bgA=0;else{el.box.bg=v;if(!el.box.bgA)el.box.bgA=1;const n=parseInt(v.slice(1),16),lum=(.299*(n>>16&255)+.587*(n>>8&255)+.114*(n&255));if(!(el.marks||[]).length)el.color=lum<140?'#ffffff':'#111111'}},true);
@@ -748,7 +772,7 @@ function renderBrowse(){const tb=$('#brTabs'),bd=$('#brBody');tb.innerHTML='';[[
   const styleTile=st=>{const t=h('div','stile');const pv=stylePreview(st);pv.style.cursor='pointer';pv.onclick=()=>useStyle(st);const f=h('div','sfoot');f.append(h('span',null,st[1]));const bm=h('button','bm',ST.bm.includes('s:'+st[1])?'★':'☆');bm.setAttribute('aria-label','즐겨찾기');bm.onclick=()=>bmToggle('s:'+st[1],bm);f.append(bm);t.append(pv,f);return t};
   const presetTile=pr=>{const t=h('div','ptile');const tp=h('div','ptop');tp.append(h('b',null,pr.name));const bm=h('button','bm',ST.bm.includes('p:'+pr.name)?'★':'☆');bm.onclick=()=>bmToggle('p:'+pr.name,bm);tp.append(bm);const g=h('div','prev3');const labs=pr.pages.length===1?['한 장']:['표지','본문','마지막'];pr.pages.forEach((_,i)=>{const d=h('div');d.append(presetPreview(pr,i,pr.pages.length===1?1:3),h('span',null,labs[i]));g.append(d)});const u=h('button','use','이 템플릿 쓰기');u.onclick=()=>usePreset(pr);t.append(tp,g,u);return t};
   if(brTab==='style'){let last='';const cats={};STY.forEach(st=>{(cats[st[0]]=cats[st[0]]||[]).push(st)});for(const c in cats){bd.append(h('div','bcat',c));const g=h('div','sgrid');cats[c].forEach(st=>g.append(styleTile(st)));bd.append(g)}}
-  else if(brTab==='page'){note2(bd,'표지·본문·마지막 세 가지 모양이 장 수에 맞게 들어가요. 첫 장은 표지, 마지막 장은 마지막, 나머지는 본문 모양이에요.');const pgd=h('div','pgrid');PRE.forEach(pr=>pgd.append(presetTile(pr)));bd.append(pgd)}
+  else if(brTab==='page'){note2(bd,'표지·본문·마지막 세 가지 모양이 장 수에 맞게 들어가요. 첫 장은 표지, 마지막 장은 마지막, 나머지는 본문 모양이에요.');const grp=(t,list)=>{if(!list.length)return;const hd=h('div',null,`${t} ${list.length}`);hd.style.cssText='font-weight:800;font-size:18px;margin:14px 2px 8px';bd.append(hd);const pgd=h('div','pgrid');list.forEach(pr=>pgd.append(presetTile(pr)));bd.append(pgd)};grp('세 장 묶음',PRE.filter(p=>p.pages.length>1));grp('한 장',PRE.filter(p=>p.pages.length===1))}
   else{const ss=STY.filter(s=>ST.bm.includes('s:'+s[1])),ps=PRE.filter(p=>ST.bm.includes('p:'+p.name));if(!ss.length&&!ps.length){note2(bd,'☆를 눌러 자주 쓰는 모양을 모아 두세요.');return}if(ss.length){bd.append(h('div','bcat','글상자 모양'));const g=h('div','sgrid');ss.forEach(st=>g.append(styleTile(st)));bd.append(g)}if(ps.length){bd.append(h('div','bcat','페이지 프리셋'));const pgd=h('div','pgrid');ps.forEach(pr=>pgd.append(presetTile(pr)));bd.append(pgd)}}}
 function note2(b,t){const p=h('p','fnote',t);b.append(p)}
 
