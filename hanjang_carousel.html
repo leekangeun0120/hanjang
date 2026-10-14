@@ -68,7 +68,7 @@ svg{display:block}
 #selbox .htl{display:none;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;border:3px solid #111;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.35)}
 #selbox .htl::after{content:"";position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:#111}
 .bgrow{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;margin-bottom:2px}.bgt{flex:none;padding:3px;border-radius:12px;border:2.5px solid transparent;background:none}.bgt.on{border-color:#fff}.bgt canvas{display:block;width:46px;border-radius:8px}
-.shpgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:4px 0 10px}.shpb{background:var(--panel2);border-radius:12px;padding:6px 2px 6px;color:#fff;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:2px}.shpb canvas{width:44px;height:32px}
+.shpgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:4px 0 10px}.shpb{background:var(--panel2);border-radius:12px;padding:6px 2px 6px;color:#fff;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:2px}.shpb canvas{width:44px;height:32px}.shpgrid.sm .shpb{padding:4px 2px;font-size:10px}.shpgrid.sm .shpb canvas{width:34px;height:24px}
 .subtabs{display:flex;gap:18px;border-bottom:1px solid var(--line);margin:4px 2px 10px;overflow-x:auto;position:sticky;top:0;background:var(--bg);z-index:2;padding-top:6px}.subtab{flex:none;padding:8px 0 10px;font-size:17px;font-weight:600;color:#9a9aa0;border-bottom:3px solid transparent;margin-bottom:-1px}.subtab small{font-size:13px;color:#b5b5ba;font-weight:500}.subtab.on{color:var(--ink);border-bottom-color:var(--ink)}
 .pgrid.one{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.pgrid.one .ptile{margin:0;padding:10px}.pgrid.one .prev3{grid-template-columns:1fr!important}.pgrid.one .ptop b{font-size:14px}
 .tlbtns{display:flex;gap:8px;margin:4px 0 10px;overflow-x:auto}
@@ -677,7 +677,7 @@ const allEls=()=>[...P.globals,...curPg().elements];
 const selEl=()=>selId?allEls().find(e=>e.id===selId)||null:null;
 function ownerOf(el){return P.globals.includes(el)?P.globals:curPg().elements}
 function placeSel(){const el=selEl(),sb=$('#selbox');$('#fab').classList.toggle('has',!!el);if(!el||mode!=='normal'||!el._w||ANIM){sb.style.display='none';return}sb.style.display='block';const pad=6;sb.style.width=(el._w*K+pad*2)+'px';sb.style.height=(el._h*K+pad*2)+'px';sb.style.left=(el.x*K)+'px';sb.style.top=(el.y*K)+'px';sb.style.transform=`translate(-50%,-50%) rotate(${el.rot||0}deg)`;const th=sb.querySelector('.htl'),tl=el.type==='text'&&el.box.tail;if(tl&&tl.type&&tl.type!=='none'&&tl.tx!=null){th.style.display='block';th.style.transform=`translate(${tl.tx*K}px,${tl.ty*K}px)`}else th.style.display='none'}
-function setSel(id){if(selId===id)return dirty();selId=id;if(tool&&NEED_EL.has(tool)){if(!id)closeTool();else buildPanel()}else if(tool==='shape')buildPanel();dirty()}
+function setSel(id){if(selId===id)return dirty();selId=id;{const se=selEl();if(se&&se.type==='shape'&&tool&&tool!=='shape'&&!SHAPE_OK.has(tool)){openTool('shape','도형');return dirty()}}if(tool&&NEED_EL.has(tool)){if(!id)closeTool();else buildPanel()}else if(tool==='shape')buildPanel();dirty()}
 function hint(t){const e=$('#hint');if(t){e.textContent=t;e.classList.add('on')}else e.classList.remove('on')}
 
 /* 되돌리기 */
@@ -834,16 +834,19 @@ global(b,el){toggle(b,'모든 페이지에 똑같이',()=>P.globals.includes(el)
 pagenum(b,el){toggle(b,'페이지 번호',()=>el.dyn==='pagenum',v=>{if(v){el._old=el.text;el.dyn='pagenum';if(!P.globals.includes(el))moveEl(el,true)}else{el.dyn=null;el.text=el._old||'글을 입력하세요'}},'페이지를 더하거나 빼면 숫자가 따라갑니다. 글은 못 고치고 모양만');b.append(h('div','prow','계정 이름 넣기'));btns(b,[['@계정이름으로 바꾸기',()=>{el.dyn='account';dirty(true);commit(true)}]])},
 order(b,el){const arr=ownerOf(el),mv=f=>{const i=arr.indexOf(el);arr.splice(i,1);arr.splice(clamp(f(i),0,arr.length),0,el);dirty(true);commit(true)};btns(b,[['맨 뒤로',()=>mv(()=>0)],['뒤로',()=>mv(i=>i-1)],['앞으로',()=>mv(i=>i+1)],['맨 앞으로',()=>mv(()=>arr.length)]])},
 emoji(b){let cat=PANELS._cat||'기호';const tabs=chips(b,Object.keys(EMO).map(k=>[k,k]),()=>cat,v=>{PANELS._cat=v;buildPanel()},false,true);const g=h('div','emogrid'+(['기호','날씨·계절','공부·일'].includes(cat)?'':' wide'));EMO[cat].forEach(e=>{const x=h('button',null,e);x.onclick=()=>{const el=defText();el.text=e;el.font='Noto Sans KR';el.weight=400;el.size=cat==='기호'?90:58;el.shadow=30;el.sp.px=8;el.sp.py=6;el.x=W/2+(Math.random()-.5)*160;el.y=H()/2+(Math.random()-.5)*160;curPg().elements.push(el);selId=el.id;commit(true);dirty(true);toast('추가했어요. 끌어서 옮길 수 있어요')};g.append(x)});b.append(g)},
-shape(b){const el=selEl();
-  b.append(h('div','plab','도형 넣기'));const g=h('div','shpgrid');SHAPES.forEach(([nm,k,d])=>{const bt=h('button','shpb');bt.setAttribute('aria-label',nm);const c=mk(88,64),cx=c.getContext('2d');cx.translate(44,32);const sc=Math.min(70/d.w,50/Math.max(d.h,30));cx.scale(sc,sc);drawShape(cx,Object.assign({kind:k,shadow:0},d,LINEY.has(k)?{stroke:'#ffffff'}:{fill:'#ffffff',sw:0}),{s:1});bt.append(c,h('span',null,nm));bt.onclick=()=>{const e=Object.assign({id:uid(),type:'shape',kind:k,x:W/2,y:H()/2,rot:0,shadow:0,dash:'solid'},JSON.parse(JSON.stringify(d)));curPg().elements.push(e);selId=e.id;commit(true);dirty(true);buildPanel()};g.append(bt)});b.append(g);
-  if(!el||el.type!=='shape'){note(b,'도형을 누르면 가운데에 생겨요. 끌어서 옮기고 모서리 동그라미로 크기를 바꿔요.');return}
-  const ln=LINEY.has(el.kind);b.append(h('div','plab',ln?'선 색':'채우기 색'));
-  if(ln)swatches(b,()=>el.stroke,v=>el.stroke=v);else{swatches(b,()=>el.fill,v=>el.fill=v,true);slider(b,'채우기 진하기',0,100,1,()=>Math.round((el.fa==null?1:el.fa)*100),v=>el.fa=v/100,v=>v+'%')}
-  slider(b,ln?'선 두께':'테두리 두께',0,40,.5,()=>el.sw||0,v=>el.sw=v,v=>v+'pt');
-  if(!ln){b.append(h('div','plab','테두리 색'));swatches(b,()=>el.stroke,v=>{el.stroke=v;if(!el.sw)el.sw=4})}
-  b.append(h('div','plab','선 모양'));chips(b,[['실선','solid'],['점선','dash'],['동글 점선','dot']],()=>el.dash||'solid',v=>{el.dash=v;if(!el.sw)el.sw=4});
+shape(b){const el=selEl(),isS=el&&el.type==='shape';
+  const addGrid=()=>{const g=h('div','shpgrid'+(isS?' sm':''));SHAPES.forEach(([nm,k,d])=>{const bt=h('button','shpb');bt.setAttribute('aria-label',nm);const c=mk(88,64),cx=c.getContext('2d');cx.translate(44,32);const sc=Math.min(70/d.w,50/Math.max(d.h,30));cx.scale(sc,sc);drawShape(cx,Object.assign({kind:k,shadow:0},d,LINEY.has(k)?{stroke:'#ffffff'}:{fill:'#ffffff',sw:0}),{s:1});bt.append(c,h('span',null,nm));bt.onclick=()=>{const e=Object.assign({id:uid(),type:'shape',kind:k,x:W/2,y:H()/2,rot:0,shadow:0,dash:'solid'},JSON.parse(JSON.stringify(d)));curPg().elements.push(e);selId=e.id;commit(true);dirty(true);buildPanel();$('#panel').scrollTop=0};g.append(bt)});b.append(g)};
+  if(!isS){b.append(h('div','plab','도형 넣기'));addGrid();note(b,'도형을 누르면 가운데에 생기고, 바로 색·테두리를 고를 수 있어요.');return}
+  const ln=LINEY.has(el.kind),up=()=>{dirty(true);commit();buildPanel()};
+  if(ln){b.append(h('div','plab','선 색'));swatches(b,()=>el.stroke,v=>el.stroke=v);slider(b,'선 두께',1,40,.5,()=>el.sw||1,v=>el.sw=v,v=>v+'pt')}
+  else{
+    toggle(b,'색 채우기',()=>el.fill&&el.fill!=='none',v=>{if(v){el.fill=el._fill||'#ffd43b'}else{el._fill=el.fill;el.fill='none';if(!(el.sw>0)){el.sw=el._sw||6;if(!el.stroke||el.stroke==='none')el.stroke='#111111'}}up()},'끄면 속이 빈 도형이 돼요');
+    if(el.fill&&el.fill!=='none'){swatches(b,()=>el.fill,v=>el.fill=v);slider(b,'채우기 진하기',5,100,1,()=>Math.round((el.fa==null?1:el.fa)*100),v=>el.fa=v/100,v=>v+'%')}
+    toggle(b,'테두리',()=>el.sw>0,v=>{if(v){el.sw=el._sw||6;if(!el.stroke||el.stroke==='none')el.stroke='#111111'}else{el._sw=el.sw;el.sw=0;if(!el.fill||el.fill==='none')el.fill=el._fill||'#ffd43b'}up()},'도형 둘레에 선을 둘러요');
+    if(el.sw>0){swatches(b,()=>el.stroke,v=>el.stroke=v);slider(b,'테두리 두께',.5,40,.5,()=>el.sw,v=>el.sw=v,v=>v+'pt')}}
+  if(el.sw>0){b.append(h('div','plab','선 모양'));chips(b,[['실선','solid'],['점선','dash'],['동글 점선','dot']],()=>el.dash||'solid',v=>el.dash=v)}
   slider(b,'가로 길이',20,1080,1,()=>el.w,v=>el.w=v,v=>Math.round(v)+'px');if(el.kind!=='line'&&el.kind!=='arrow')slider(b,el.kind==='wave'?'물결 높이':'세로 길이',el.kind==='wave'?4:20,el.kind==='wave'?120:1350,1,()=>el.h,v=>el.h=v,v=>Math.round(v)+'px');
-  note(b,'글 뒤에 깔려면 배치 → 순서에서 뒤로 보내요. 손그림 동그라미와 물결 밑줄은 강조하고 싶은 글 위에 얹으면 좋아요.')},
+  b.append(h('div','plab','다른 도형 넣기'));addGrid();note(b,'글 뒤에 깔려면 배치 → 순서에서 뒤로 보내요. 손그림 동그라미·물결 밑줄은 강조할 글 위에 얹으면 좋아요.')},
 sout(b,el){if(el.type!=='sticker'){note(b,'누끼 사진(스티커)을 선택해 주세요.');return}
   btns(b,[['얇게',()=>{el.ol=6;dirty(true);commit();buildPanel()}],['보통',()=>{el.ol=14;dirty(true);commit();buildPanel()}],['두껍게',()=>{el.ol=26;dirty(true);commit();buildPanel()}],['없애기',()=>{el.ol=0;dirty(true);commit();buildPanel()}]]);
   slider(b,'두께',0,50,1,()=>el.ol||0,v=>el.ol=v,v=>v+'px');b.append(h('div','plab','외곽선 색'));swatches(b,()=>el.olc||'#ffffff',v=>{el.olc=v;if(!el.ol)el.ol=14});
