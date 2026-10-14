@@ -232,6 +232,7 @@ svg{display:block}
 #panel{grid-area:panel;max-height:none;margin:8px 14px 14px;align-self:start;overflow:auto}
 #panel.on{max-height:100%}
 }
+@media (max-width:600px){#editor.popen .strip{display:none}#panel{max-height:36vh}.subtab{font-size:15px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -664,14 +665,17 @@ let _vt=0;function vidLoop(){requestAnimationFrame(vidLoop);if(!P)return;const o
   for(const id in VIDS){const v=VIDS[id];if(vid&&vid.id===id&&!vid.scrub){if(v.paused)v.play().catch(()=>{});if(v.currentTime>=vid.end-.03||v.currentTime<vid.start-.25)v.currentTime=vid.start}else if(!v.paused)v.pause()}
   if(vid&&VIDS[vid.id]){const now=performance.now();if(now-_vt>33){_vt=now;dirty()}}}
 requestAnimationFrame(vidLoop);
+if(window.visualViewport)visualViewport.addEventListener('resize',()=>{clearTimeout(window._vvt);window._vvt=setTimeout(()=>{if(P&&$('#editor').classList.contains('on'))layoutStage()},120)});
 function dirty(th){if(th)_th=true;if(_d)return;_d=true;requestAnimationFrame(()=>{_d=false;draw()})}
 function draw(){if(!P||!$('#editor').classList.contains('on'))return;renderPage(cv,cur,RS,{anim:ANIM});drawOverlay();placeSel();if(_th){_th=false;schedThumbs()}}
+let GUIDE=null;
 function drawOverlay(){const x=ov.getContext('2d');x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,ov.width,ov.height);x.setTransform(DPR*K,0,0,DPR*K,0,0);const zs=zones(cur);
   x.lineWidth=3/K;for(const z of zs){x.fillStyle=z.thin?'rgba(229,72,77,.18)':'rgba(229,72,77,.14)';x.fillRect(z.x,z.y,z.w,z.h);x.setLineDash([10/K,7/K]);x.strokeStyle='#e5484d';x.strokeRect(z.x,z.y,z.w,z.h);x.setLineDash([]);
     if(z.n){x.font=`700 ${13/K}px "Noto Sans KR", sans-serif`;const tw=x.measureText(z.n).width+16/K,th=24/K;const lx=clamp(z.x+z.w/2-tw/2,2/K,W-tw-2/K),ly=clamp(z.y+z.h/2-th/2,2/K,H()-th-2/K);x.fillStyle='#e5484d';rr(x,lx,ly,tw,th,th/2);x.fill();x.fillStyle='#fff';x.textBaseline='middle';x.textAlign='center';x.fillText(z.n,lx+tw/2,ly+th/2)}}
   const bad=ST.safe!=='off'&&ST.warn?overlapped(cur):[];
   for(const el of bad){const b=aabb(el);x.strokeStyle='#e5484d';x.lineWidth=4/K;x.setLineDash([]);x.strokeRect(b.l,b.t,b.r-b.l,b.b-b.t)}
   const wb=$('#warnbar');if(bad.length){wb.classList.add('on');$('#warnTxt').textContent=`인스타 버튼 자리와 겹치는 글이 ${bad.length}개 있어요`}else wb.classList.remove('on');
+  if(GUIDE){const hh=H();x.save();x.strokeStyle='#ff4f8b';x.lineWidth=1.5/K;x.setLineDash([8/K,6/K]);x.beginPath();if(GUIDE.v){x.moveTo(W/2,0);x.lineTo(W/2,hh)}if(GUIDE.h){x.moveTo(0,hh/2);x.lineTo(W,hh/2)}if(GUIDE.l!=null){x.moveTo(GUIDE.l,0);x.lineTo(GUIDE.l,hh)}x.stroke();x.restore()}
   if(BRP&&BRP.length>1){x.strokeStyle='rgba(255,255,255,.9)';x.lineWidth=BR.size*.5;x.lineCap='round';x.lineJoin='round';x.beginPath();BRP.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1]));x.stroke()}}
 const allEls=()=>[...P.globals,...curPg().elements];
 const selEl=()=>selId?allEls().find(e=>e.id===selId)||null:null;
@@ -705,7 +709,7 @@ function onDown(e){if(!P||ANIM)return;e.preventDefault();try{stage.setPointerCap
   if(el){const now=Date.now();if(lastTap.id===el.id&&now-lastTap.t<330){lastTap={};setSel(el.id);openTool('content','내용');G=null;return}lastTap={id:el.id,t:now};setSel(el.id);G={t:'move',dx:el.x-p[0],dy:el.y-p[1],moved:false}}
   else{setSel(null);G=null}}
 function onMove(e){if(!PT.has(e.pointerId))return;const p=pos(e);PT.set(e.pointerId,p);if(!G)return;const pg=curPg(),el=selEl();
-  switch(G.t){case'move':if(!el)return;el.x=p[0]+G.dx;el.y=p[1]+G.dy;G.moved=true;break;
+  switch(G.t){case'move':{if(!el)return;el.x=p[0]+G.dx;el.y=p[1]+G.dy;G.moved=true;const th=12/K,hh=H();GUIDE={};if(Math.abs(el.x-W/2)<th){el.x=W/2;GUIDE.v=1}if(Math.abs(el.y-hh/2)<th){el.y=hh/2;GUIDE.h=1}const hw=(el._w||0)/2;if(!(el.rot)){for(const m of[W*.06,W*.94]){if(Math.abs(el.x-hw-m)<th&&m<W/2){el.x=m+hw;GUIDE.l=m}if(Math.abs(el.x+hw-m)<th&&m>W/2){el.x=m-hw;GUIDE.l=m}}}break}
   case'pinch':{if(!el||PT.size<2)return;const[a,b]=[...PT.values()];applyScale(el,G.snap,dist(a,b)/G.d0);el.rot=G.r0+(ang(a,b)-G.a0)*180/Math.PI;break}
   case'pan':pg.fit.x=G.x0+p[0]-G.p0[0];pg.fit.y=G.y0+p[1]-G.p0[1];break;
   case'zoom':{if(PT.size<2)return;const[a,b]=[...PT.values()];pg.fit.scale=clamp(G.s0*dist(a,b)/G.d0,1,5);break}
@@ -715,7 +719,7 @@ function onMove(e){if(!PT.has(e.pointerId))return;const p=pos(e);PT.set(e.pointe
   case'tail':{if(!el||!el.box.tail)return;const a=-(el.rot||0)*Math.PI/180,dx=p[0]-el.x,dy=p[1]-el.y;el.box.tail.tx=dx*Math.cos(a)-dy*Math.sin(a);el.box.tail.ty=dx*Math.sin(a)+dy*Math.cos(a);break}
   case'rot':{if(!el)return;let r=G.r0+(ang(G.c,p)-G.a0)*180/Math.PI;r=((r%360)+540)%360-180;for(const s of[-180,-90,0,90,180])if(Math.abs(r-s)<4)r=s;el.rot=r;break}}
   dirty(G.t!=='brush')}
-function onUp(e){if(!PT.has(e.pointerId))return;PT.delete(e.pointerId);if(!G)return;if(G.t==='pinch'||G.t==='zoom'){if(PT.size)return}
+function onUp(e){if(!PT.has(e.pointerId))return;PT.delete(e.pointerId);if(GUIDE){GUIDE=null;dirty()}if(!G)return;if(G.t==='pinch'||G.t==='zoom'){if(PT.size)return}
   const el=selEl();if(G.t==='brush'){if(BRP&&BRP.length>2)makeBrush(BRP);BRP=null}
   if(el&&['move','pinch','scale','rot'].includes(G.t)&&(G.t!=='move'||G.moved)&&ST.push&&ST.safe!=='off')pushOut(el,cur);
   if(G.t!=='move'||G.moved)commit(true);if(tool&&['size','rot'].includes(tool))buildPanel();G=null;dirty(true)}
@@ -763,8 +767,8 @@ function ensureEl(id){let el=selEl();if(id==='sout'&&(!el||el.type!=='sticker'))
 const ACTIONS={photo:async()=>{const fs=await pickFiles('image/*',false);if(!fs.length)return;try{curPg().photo=addAsset(await fileToData(fs[0]));curPg().fit={scale:1,x:0,y:0};commit(true);dirty(true)}catch(e){toast(e.message)}},dup:dupPage,pdel:delPage};
 function openTool(id,lab){if(id==='pbg')BGT=null;if(ACTIONS[id]){closeTool();ACTIONS[id]();return}if(NEED_EL.has(id)&&!ensureEl(id))return;tool=id;toolLab=lab;mode=id==='crop'?'crop':id==='mask'?'mask':id==='brush'?'brush':'normal';
   hint(mode==='crop'?'사진을 끌어 옮기고, 두 손가락으로 키워요':mode==='mask'?'가리고 싶은 곳을 문질러요':mode==='brush'?'손가락으로 그으면 글이 따라 써져요':'');buildPanel();renderTools();dirty()}
-function closeTool(){tool=null;mode='normal';hint('');$('#panel').classList.remove('on');$('#panel').innerHTML='';renderTools();dirty()}
-function buildPanel(){const p=$('#panel');if(!tool){closeTool();return}const el=NEED_EL.has(tool)?selEl():null;if(NEED_EL.has(tool)&&!el){closeTool();return}const st=p.scrollTop;p.innerHTML='';const hd=h('div','ph');hd.append(h('span','ptitle',toolLab));const x=h('button','px','✕');x.setAttribute('aria-label','닫기');x.onclick=closeTool;hd.append(x);const b=h('div','pb');p.append(hd,b);PANELS[tool](b,el,curPg());p.classList.add('on');p.scrollTop=st}
+function closeTool(){$('#editor').classList.remove('popen');requestAnimationFrame(layoutStage);tool=null;mode='normal';hint('');$('#panel').classList.remove('on');$('#panel').innerHTML='';renderTools();dirty()}
+function buildPanel(){const p=$('#panel');if(!tool){closeTool();return}if(!$('#editor').classList.contains('popen')){$('#editor').classList.add('popen');requestAnimationFrame(layoutStage)}const el=NEED_EL.has(tool)?selEl():null;if(NEED_EL.has(tool)&&!el){closeTool();return}const st=p.scrollTop;p.innerHTML='';const hd=h('div','ph');hd.append(h('span','ptitle',toolLab));const x=h('button','px','✕');x.setAttribute('aria-label','닫기');x.onclick=closeTool;hd.append(x);const b=h('div','pb');p.append(hd,b);PANELS[tool](b,el,curPg());p.classList.add('on');p.scrollTop=st}
 /* 패널 부품 */
 function slider(box,label,min,max,step,get,set,fmt=v=>Math.round(v)){const g=h('div','pgrp'),top=h('div','prow');top.append(h('span','plab',label));const v=h('span','pval',fmt(get()));top.append(v);const s=h('input','rng');s.type='range';s.min=min;s.max=max;s.step=step;s.value=get();s.oninput=()=>{set(+s.value);v.textContent=fmt(+s.value);dirty(true)};s.onchange=()=>commit();g.append(top,s);box.append(g);return s}
 function chips(box,opts,get,set,fontPrev,scroll){const w=h('div','chips'+(scroll?' scroll':''));opts.forEach(([lab,val])=>{const b=h('button','chip'+(get()===val?' on':''),lab);if(fontPrev)b.style.fontFamily=FF(val);b.onclick=()=>{set(val);w.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));b.classList.add('on');dirty(true);commit()};w.append(b)});box.append(w);return w}
