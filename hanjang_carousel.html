@@ -329,7 +329,7 @@ function newPage(photo){return{id:uid(),photo:photo||null,bg:'#8c8c8c',fit:{scal
 const STY=[
 ['제목','흰 굵은 제목',{size:76,weight:800,shadow:35}],
 ['제목','라임 제목',{size:76,weight:800,color:'#dcff5c',shadow:30}],
-['제목','찌부 제목',{font:'Do Hyeon',size:86,weight:400,shadow:25}],
+['제목','찌부 제목',{font:'Do Hyeon',size:96,weight:400,shadow:25,sp:{sx:72}}],
 ['제목','테두리 제목',{size:62,weight:800,color:'#111111',box:{bg:'#ffffff',bgA:1,bw:4,border:'#111111'},sp:{px:28,py:14}}],
 ['제목','명조 제목',{font:'Nanum Myeongjo',size:70,weight:800,shadow:30}],
 ['제목','검정판 제목',{size:62,weight:800,box:{bg:'#111111',bgA:1},sp:{px:26,py:12}}],
@@ -525,7 +525,7 @@ const MC=mk(10,10).getContext('2d');
 function txtOf(el,I){if(el.dyn==='pagenum')return(I.pi+1)+'/'+I.total;if(el.dyn==='account')return'@'+ST.account;return el.text||' '}
 function markAt(el,i){const m={};for(const k of el.marks||[])if(i>=k.s&&i<k.e){if(k.t==='bold')m.bold=1;if(k.t==='color')m.color=k.c;if(k.t==='hl')m.hl=k.c}return m}
 function layoutText(el,I){const t=txtOf(el,I),sz=el.size,ls=el.sp.ls/100*sz,lines=[];let idx=0,k=0,maxW=0;
-  for(const r of t.split('\n')){const chars=[];let lw=0;for(const ch of Array.from(r)){const m=el.dyn?{}:markAt(el,idx);const w8=m.bold?Math.max(800,el.weight+200):el.weight;const f=`${w8} ${sz}px ${FF(el.font)}`;MC.font=f;const cw=MC.measureText(ch).width;chars.push({ch,f,cw,k:k++,m});lw+=cw+ls;idx+=ch.length}if(chars.length)lw-=ls;lines.push({chars,w:lw});maxW=Math.max(maxW,lw);idx+=1}
+  for(const r of t.split('\n')){const chars=[];let lw=0;for(const ch of Array.from(r)){const m=el.dyn?{}:markAt(el,idx);const w8=m.bold?Math.max(800,el.weight+200):el.weight;const f=`${w8} ${sz}px ${FF(el.font)}`;MC.font=f;const cw=MC.measureText(ch).width*(el.sp.sx||100)/100;chars.push({ch,f,cw,k:k++,m});lw+=cw+ls;idx+=ch.length}if(chars.length)lw-=ls;lines.push({chars,w:lw});maxW=Math.max(maxW,lw);idx+=1}
   const lh=sz*el.sp.lh,th=lh*(lines.length-1)+sz;let bw=maxW+el.sp.px*2;if(el.box.minOn)bw=Math.max(bw,W*el.box.minPct/100);return{lines,bw,bh:th+el.sp.py*2,th,lh,ls,sz,t}}
 function setSh(x,el,I){const a=el.shadow/100;x.shadowColor=`rgba(0,0,0,${.25+a*.6})`;x.shadowBlur=el.size*(.06+a*.3)*I.s;x.shadowOffsetY=el.size*.05*a*I.s}
 function clrSh(x){x.shadowColor='transparent';x.shadowBlur=0;x.shadowOffsetY=0}
@@ -560,9 +560,9 @@ function drawText(x,el,I){const L=layoutText(el,I),w=L.bw,hh=L.bh,B=el.box;el._w
   L.lines.forEach((ln,li)=>{let sx=el.align==='left'?-w/2+el.sp.px:el.align==='right'?w/2-el.sp.px-ln.w:-ln.w/2;const cy=top+li*L.lh+L.sz/2;for(const c of ln.chars){const j=el.sp.jitter/100*L.sz*.28*((c.k%2)?1:-1)*(.75+.25*Math.abs(Math.sin(c.k*1.7)));pos.push({c,x:sx,y:cy+j});sx+=c.cw+L.ls}});
   for(const p of pos)if(p.c.m.hl){x.fillStyle=p.c.m.hl;x.fillRect(p.x-L.ls/2-1,p.y-L.sz*.44,p.c.cw+Math.max(0,L.ls)+2,L.sz*.88)}
   const sh=el.shadow>0;
-  if(el.stroke>0){x.lineJoin='round';x.lineWidth=el.stroke*2;x.strokeStyle=el.strokeColor;if(sh)setSh(x,el,I);for(const p of pos){x.font=p.c.f;x.strokeText(p.c.ch,p.x,p.y)}clrSh(x)}
+  if(el.stroke>0){x.lineJoin='round';x.lineWidth=el.stroke*2;x.strokeStyle=el.strokeColor;if(sh)setSh(x,el,I);const SX=(el.sp.sx||100)/100;for(const p of pos){x.font=p.c.f;if(SX!==1){x.save();x.translate(p.x,p.y);x.scale(SX,1);x.strokeText(p.c.ch,0,0);x.restore()}else x.strokeText(p.c.ch,p.x,p.y)}clrSh(x)}
   else if(sh)setSh(x,el,I);
-  for(const p of pos){x.font=p.c.f;x.fillStyle=p.c.m.color||el.color;x.fillText(p.c.ch,p.x,p.y)}clrSh(x)}
+  {const SX=(el.sp.sx||100)/100;for(const p of pos){x.font=p.c.f;x.fillStyle=p.c.m.color||el.color;if(SX!==1){x.save();x.translate(p.x,p.y);x.scale(SX,1);x.fillText(p.c.ch,0,0);x.restore()}else x.fillText(p.c.ch,p.x,p.y)}}clrSh(x)}
 function drawSticker(x,el,I){const img=IMG[el.src];const w=el.w,hh=img?w*img.naturalHeight/img.naturalWidth:w;el._w=w;el._h=hh;if(!img){x.fillStyle='rgba(255,255,255,.3)';x.fillRect(-w/2,-hh/2,w,hh);return}if(el.shadow>0)setSh(x,{shadow:el.shadow,size:w/4},I);x.drawImage(img,-w/2,-hh/2,w,hh);clrSh(x)}
 function drawBrush(x,el,I){el._w=el.bw;el._h=el.bh;const t=(el.text||'글')+' ';needFont(el.font,el.weight,t);x.font=`${el.weight} ${el.size}px ${FF(el.font)}`;x.textBaseline='middle';x.textAlign='center';
   const chars=Array.from(t),cw=ch=>x.measureText(ch).width,gap=el.size*.04,pts=el.pts,place=[];let ci=0,need=cw(chars[0])/2;
@@ -681,14 +681,14 @@ function askText(title,val){return new Promise(res=>{const b=$('#amenuBox'),m=$(
 /* ============ 도구 ============ */
 const TABS={
 '템플릿':[['글상자 모양','✦',()=>openBrowse('style')],['페이지 프리셋','▤',()=>openBrowse('page')],['즐겨찾기','★',()=>openBrowse('bm')]],
-'글':[['내용','✎','content'],['글꼴','가','font'],['크기','가가','size'],['글자색','●','color'],['강조','✐','emph'],['정렬','≡','align'],['굵기','B','weight'],['그림자','◐','shadow'],['외곽선','Ⓐ','stroke']],
+'글':[['내용','✎','content'],['글꼴','가','font'],['크기','가가','size'],['글자색','●','color'],['강조','✐','emph'],['정렬','≡','align'],['굵기','B','weight'],['찌부','↔','sx'],['그림자','◐','shadow'],['외곽선','Ⓐ','stroke']],
 '상자':[['배경색','■','bbg'],['흐림','◌','glass'],['테두리색','□','bborder'],['두께','▢','bw'],['둥글기','▭','radius'],['최소 너비','↔','minw'],['무늬','⁘','pat'],['말풍선 꼬리','💬','tail']],
-'간격':[['자간','⇔','ls'],['행간','⇕','lh'],['위아래','↕','py'],['양옆','⟷','px'],['글 위아래','☰','ty'],['들쑥날쑥','〰','jitter']],
+'간격':[['장평(찌부)','↔','sx'],['자간','⇔','ls'],['행간','⇕','lh'],['위아래','↕','py'],['양옆','⟷','px'],['글 위아래','☰','ty'],['들쑥날쑥','〰','jitter']],
 '배치':[['자리','✥','place'],['회전','↻','rot'],['모든 페이지에','⧉','global'],['페이지 번호','#','pagenum'],['순서','⇅','order']],
 '꾸밈':[['이모티콘','☺','emoji'],['로고·스티커','❏','sticker'],['글 브러시','✍','brush']],
 '레이아웃':[['배경지','◧','pbg'],['비율','▣','ratio'],['자르기','⌗','crop'],['회전','⟳','prot'],['밝기','☀','bright'],['흐리게','◍','pblur'],['그라데이션','◒','grad'],['가리기','☝','mask'],['글 움직임','✧','motion'],['안전 영역','⬚','safe'],['동영상 자르기','▶','video'],['사진 바꾸기','⧈','photo'],['페이지 복제','⿻','dup'],['페이지 순서','⇄','porder'],['페이지 삭제','✕','pdel']]};
-const NEED_EL=new Set(['content','font','size','color','emph','align','weight','shadow','stroke','bbg','glass','bborder','bw','radius','minw','tail','pat','ls','lh','py','px','ty','jitter','place','rot','global','pagenum','order']);
-const TEXT_ONLY=new Set(['emph','align','bbg','glass','bborder','bw','radius','minw','tail','pat','ls','lh','py','px','ty','jitter','pagenum']);
+const NEED_EL=new Set(['content','font','size','color','emph','align','weight','shadow','stroke','bbg','glass','bborder','bw','radius','minw','tail','pat','sx','ls','lh','py','px','ty','jitter','place','rot','global','pagenum','order']);
+const TEXT_ONLY=new Set(['emph','align','bbg','glass','bborder','bw','radius','minw','tail','pat','sx','ls','lh','py','px','ty','jitter','pagenum']);
 const STICKER_OK=new Set(['place','rot','global','order','shadow','size']);
 function renderTabs(){const t=$('#tabs');t.innerHTML='';Object.keys(TABS).forEach(k=>{const b=h('button','tab'+(k===tab?' on':''),k);b.onclick=()=>{tab=k;renderTabs();renderTools()};t.append(b)})}
 function renderTools(){const t=$('#tools');t.innerHTML='';TABS[tab].forEach(([lab,ic,id])=>{const b=h('button','tool'+(tool===id?' on':''));b.append(h('span','tic',ic),h('span','tlab',lab));b.onclick=()=>typeof id==='function'?id():(tool===id?closeTool():openTool(id,lab));t.append(b)})}
@@ -749,6 +749,7 @@ lh(b,el){slider(b,'행간',.8,2.5,.05,()=>el.sp.lh,v=>el.sp.lh=v,v=>(+v).toFixed
 py(b,el){slider(b,'위아래 여백',0,140,1,()=>el.sp.py,v=>el.sp.py=v,v=>Math.round(v)+'pt')},
 px(b,el){slider(b,'양옆 여백',0,200,1,()=>el.sp.px,v=>el.sp.px=v,v=>Math.round(v)+'pt')},
 ty(b,el){slider(b,'글 위아래',-80,80,1,()=>el.sp.ty,v=>el.sp.ty=v,v=>v===0?'0':(v<0?'▲':'▼')+Math.abs(Math.round(v)));note(b,'상자 안에서 글만 위아래로 옮겨요.')},
+sx(b,el){slider(b,'가로 폭',40,160,1,()=>el.sp.sx||100,v=>el.sp.sx=v,v=>v+'%');btns(b,[['꾹 찌부 70%',()=>{el.sp.sx=70;dirty(true);commit();buildPanel()}],['살짝 찌부 85%',()=>{el.sp.sx=85;dirty(true);commit();buildPanel()}],['원래대로',()=>{el.sp.sx=100;dirty(true);commit();buildPanel()}]]);note(b,'100%보다 줄이면 글자가 옆으로 눌려 길쭉해지고, 늘리면 넓적해져요.')},
 jitter(b,el){slider(b,'들쑥날쑥',0,100,1,()=>el.sp.jitter,v=>el.sp.jitter=v,v=>v+'%')},
 place(b,el){const g=h('div','grid9');const hh=H(),m=60;[['↖',0,0],['↑',1,0],['↗',2,0],['←',0,1],['●',1,1],['→',2,1],['↙',0,2],['↓',1,2],['↘',2,2]].forEach(([s,cx,cy])=>{const x=h('button',null,s);x.onclick=()=>{const b2=aabb(el),ew=(b2.r-b2.l)/2,eh=(b2.b-b2.t)/2;el.x=[ew+m,W/2,W-ew-m][cx];el.y=[eh+m*1.4,hh/2,hh-eh-m*1.4][cy];if(ST.safe!=='off')pushOut(el,cur);dirty(true);commit(true)};g.append(x)});b.append(g);btns(b,[['가로 가운데',()=>{el.x=W/2;dirty(true);commit(true)}],['세로 가운데',()=>{el.y=hh/2;dirty(true);commit(true)}]]);if(ST.safe!=='off')note(b,'안전 영역이 켜져 있어서 버튼 자리는 피해서 놓아요.')},
 rot(b,el){slider(b,'회전',-180,180,1,()=>Math.round(el.rot||0),v=>el.rot=v,v=>v+'°');btns(b,[['0°',()=>{el.rot=0;dirty(true);commit(true);buildPanel()}],['-90°',()=>{el.rot=-90;dirty(true);commit(true);buildPanel()}],['90°',()=>{el.rot=90;dirty(true);commit(true);buildPanel()}]])},
