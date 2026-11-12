@@ -352,15 +352,18 @@ async function apiErr(res){let m='';try{m=(await res.json()).error.message||''}c
   if(res.status===429)return/limit:\s*0|free_tier/i.test(m)?'이 키로는 이 기능이 막혀 있어요 (무료 한도 0). 결제를 연결한 키가 필요해요':'사용량 한도에 걸렸어요. 1~2분 뒤에 다시 해 보세요';
   if(res.status===403||/API key/i.test(m))return'API 키가 맞지 않아요. ⚙ 설정에서 다시 넣어 주세요';
   if(res.status===404)return'이 모델을 쓸 수 없어요. ⚙ 설정에서 모델을 바꿔 주세요';
-  if(res.status>=500)return'Google 서버가 잠시 응답하지 않아요. 잠시 뒤 다시 해 보세요';
+  if(res.status>=500)return`Google 서버가 응답하지 않아요 (${res.status}${m?' · '+m.slice(0,90):''}). 다른 모델로도 다시 해 봤지만 안 됐어요. 몇 분 뒤 다시 해 보세요`;
   return'AI 요청이 실패했어요'+(m?' · '+m.slice(0,140):'')}
+const FALLBACK=['gemini-flash-latest','gemini-3.5-flash-lite','gemini-flash-lite-latest'];
 async function gemini(parts,o={}){const key=gKey();if(!key)throw new Error('먼저 Gemini API 키를 넣어 주세요');
-  const call=async think=>{const ctrl=new AbortController(),tm=setTimeout(()=>ctrl.abort(),(o.sec||180)*1000);
+  const call=async(model,think)=>{const ctrl=new AbortController(),tm=setTimeout(()=>ctrl.abort(),(o.sec||180)*1000);
     const body=Object.assign({contents:[{role:'user',parts}],generationConfig:Object.assign({temperature:o.temp==null?.4:o.temp,maxOutputTokens:o.max||16384},o.json?{responseMimeType:'application/json'}:{},o.cfg||{},think?{thinkingConfig:{thinkingLevel:'low'}}:{})},o.tools?{tools:o.tools}:{});
-    try{return await fetch(`${GAPI}/v1beta/models/${encodeURIComponent(gModel())}:generateContent?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,body:JSON.stringify(body)})}
+    try{return await fetch(`${GAPI}/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,body:JSON.stringify(body)})}
     catch(e){throw new Error(e.name==='AbortError'?'응답이 너무 오래 걸려 멈췄어요. 다시 해 보세요':'AI에 연결하지 못했어요. 인터넷을 확인해 주세요')}finally{clearTimeout(tm)}};
-  let res=await call(!_noThink);
-  if(res.status===400&&!_noThink){let m='';try{m=(await res.clone().json()).error.message||''}catch(e){}if(/think/i.test(m)){_noThink=true;res=await call(false)}}
+  const models=[gModel()].concat(FALLBACK.filter(m=>m!==gModel()));let res;
+  out:for(let mi=0;mi<models.length;mi++){for(let at=0;at<2;at++){res=await call(models[mi],!_noThink);
+      if(res.status===400&&!_noThink){let m='';try{m=(await res.clone().json()).error.message||''}catch(e){}if(/think/i.test(m)){_noThink=true;res=await call(models[mi],false)}}
+      if(res.ok)break out;if(res.status<500&&!(mi>0&&res.status===404))break out;if(res.status===404)break;if(at===0)await new Promise(r=>setTimeout(r,2500))}}
   if(!res.ok)throw new Error(await apiErr(res));
   const j=await res.json(),c=j.candidates&&j.candidates[0],txt=c&&c.content&&c.content.parts?c.content.parts.filter(p=>p.text&&!p.thought).map(p=>p.text).join(''):'';
   if(!txt)throw new Error('AI가 답을 주지 않았어요. 다시 해 보세요');return{text:txt,cand:c}}
