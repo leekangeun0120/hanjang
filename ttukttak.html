@@ -356,7 +356,7 @@ async function apiErr(res){let m='';try{m=(await res.json()).error.message||''}c
   return'AI 요청이 실패했어요'+(m?' · '+m.slice(0,140):'')}
 async function gemini(parts,o={}){const key=gKey();if(!key)throw new Error('먼저 Gemini API 키를 넣어 주세요');
   const call=async think=>{const ctrl=new AbortController(),tm=setTimeout(()=>ctrl.abort(),(o.sec||180)*1000);
-    const body=Object.assign({contents:[{role:'user',parts}],generationConfig:Object.assign({temperature:o.temp==null?.4:o.temp,maxOutputTokens:o.max||16384},o.json?{responseMimeType:'application/json'}:{},think?{thinkingConfig:{thinkingLevel:'low'}}:{})},o.tools?{tools:o.tools}:{});
+    const body=Object.assign({contents:[{role:'user',parts}],generationConfig:Object.assign({temperature:o.temp==null?.4:o.temp,maxOutputTokens:o.max||16384},o.json?{responseMimeType:'application/json'}:{},o.cfg||{},think?{thinkingConfig:{thinkingLevel:'low'}}:{})},o.tools?{tools:o.tools}:{});
     try{return await fetch(`${GAPI}/v1beta/models/${encodeURIComponent(gModel())}:generateContent?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,body:JSON.stringify(body)})}
     catch(e){throw new Error(e.name==='AbortError'?'응답이 너무 오래 걸려 멈췄어요. 다시 해 보세요':'AI에 연결하지 못했어요. 인터넷을 확인해 주세요')}finally{clearTimeout(tm)}};
   let res=await call(!_noThink);
@@ -396,11 +396,14 @@ async function readSource(F,FX,prog){
     if(/\.pdf$/i.test(f.name)||f.type==='application/pdf'){if(f.size>15e6)throw new Error('PDF가 너무 커요 (15MB까지)');prog('PDF를 읽는 중이에요…');
       return(await gemini([{inlineData:{mimeType:'application/pdf',data:await b64(f)}},{text:'이 문서의 글을 요약하지 말고 순서대로 옮겨 적어 줘. 쪽 번호·머리글은 빼. '+ONLY}],{max:32768,temp:.1})).text.trim()}
     const t=(await f.text()).trim();if(t.length<30)throw new Error('문서에 글이 거의 없어요');return t}
-  const VQ='이 영상에서 말한 내용과 화면에 나온 글을 순서대로 빠짐없이 한국어로 자세히 정리해 줘. 숫자·예시·고유명사는 그대로 살리고, 영상에 없는 내용은 보태지 마. '+ONLY;
-  if(F.src==='yt'){if(FX.vfile){const f=FX.vfile;if(f.size>32e6)throw new Error('영상이 너무 커요 (32MB까지)');prog('영상을 올리는 중이에요…');const part=await uploadFile(f,f.type||'video/mp4',i=>prog(`영상을 준비하는 중이에요… ${i*3}초`));prog('영상을 보는 중이에요… (1~2분)');
-      return(await gemini([part,{text:VQ}],{max:32768,temp:.1,sec:300})).text.trim()}
+  const VQ='이 영상에서 말한 내용을 처음부터 끝까지 순서대로 한국어로 정리해 줘. 인사말·잡담·광고는 빼고, 핵심 주장과 숫자·예시·고유명사·방법 순서는 빠뜨리지 마. 영상에 없는 내용은 보태지 마. 분량은 2,000~3,500자. '+ONLY;
+  const watch=async(part,label)=>{const t0=Date.now(),tm=setInterval(()=>prog(`${label} ${Math.round((Date.now()-t0)/1000)}초째 (긴 영상은 3~8분 걸려요)`),1000);
+    try{try{return(await gemini([part,{text:VQ}],{max:8192,temp:.1,sec:600,cfg:{mediaResolution:'MEDIA_RESOLUTION_LOW'}})).text.trim()}
+      catch(e){if(!/^AI 요청이 실패/.test(e.message))throw e;return(await gemini([part,{text:VQ}],{max:8192,temp:.1,sec:600})).text.trim()}}
+    catch(e){if(/오래 걸려/.test(e.message))throw new Error('영상이 길어서 10분 안에 다 보지 못했어요. 유튜브의 "스크립트 표시"로 자막을 복사해 "글 붙여넣기"에 넣으면 훨씬 빨라요');throw e}finally{clearInterval(tm)}};
+  if(F.src==='yt'){if(FX.vfile){const f=FX.vfile;if(f.size>32e6)throw new Error('영상이 너무 커요 (32MB까지)');prog('영상을 올리는 중이에요…');const part=await uploadFile(f,f.type||'video/mp4',i=>prog(`영상을 준비하는 중이에요… ${i*3}초`));return watch(part,'영상을 보는 중이에요…')}
     const u=(F.yturl||'').trim();if(!/^https?:\/\//i.test(u))throw new Error('유튜브 주소를 넣거나 영상 파일을 첨부해 주세요');if(!/youtu\.?be/i.test(u))throw new Error('유튜브 주소가 아니에요. 릴스·틱톡은 영상 파일로 첨부해 주세요');
-    prog('영상을 보는 중이에요… (1~3분)');return(await gemini([{fileData:{fileUri:u}},{text:VQ}],{max:32768,temp:.1,sec:300})).text.trim()}
+    return watch({fileData:{fileUri:u}},'영상을 보는 중이에요…')}
   let u=(F.url||'').trim();if(!/^https?:\/\//i.test(u))throw new Error('http로 시작하는 주소를 넣어 주세요');
   let m=u.match(/^https?:\/\/blog\.naver\.com\/([^/?#]+)\/(\d+)/i);if(m)u=`https://m.blog.naver.com/${m[1]}/${m[2]}`;
   m=u.match(/blog\.naver\.com\/PostView\.[a-z]+\?.*blogId=([^&]+).*logNo=(\d+)/i);if(m)u=`https://m.blog.naver.com/${m[1]}/${m[2]}`;
@@ -511,7 +514,7 @@ function renderForm(b){const ai=F.mode==='ai';
     if(F.src==='yt'){field(s1,'유튜브 URL','',F.yturl,'URL을 입력해 주세요',v=>F.yturl=v,'url');const l=h('div','lab','영상 파일 첨부 ');l.append(h('small',null,'(인스타그램 릴스, 틱톡 영상)'));s1.append(l);
       const fb=h('button','filebtn'+(FX.vfile?' has':''),FX.vfile?FX.vfile.name:'영상 파일을 선택해 주세요');if(FX.vfile){const x=h('span',null,'✕');x.onclick=e=>{e.stopPropagation();FX.vfile=null;rerender()};fb.append(x)}
       fb.onclick=async()=>{const fs=await pickFiles('video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm',false);if(!fs.length)return;if(fs[0].size>32e6){toast('32MB 이하 영상만 돼요');return}FX.vfile=fs[0];rerender()};
-      s1.append(fb,h('p','hint',FX.vfile?`${(FX.vfile.size/1e6).toFixed(1)}MB · 이 영상으로 만들어요.`:'MP4 · MOV · WEBM (32MB 이하). 파일을 첨부하면 URL 대신 이 영상으로 만들어요.'))}
+      s1.insertBefore(h('p','hint','10분 넘는 영상은 몇 분씩 걸려요. 급할 땐 유튜브의 "스크립트 표시"로 자막을 복사해 "글 붙여넣기"에 넣는 게 가장 빨라요.'),l);s1.append(fb,h('p','hint',FX.vfile?`${(FX.vfile.size/1e6).toFixed(1)}MB · 이 영상으로 만들어요.`:'MP4 · MOV · WEBM (32MB 이하). 파일을 첨부하면 URL 대신 이 영상으로 만들어요.'))}
     else if(F.src==='doc'){const fb=h('button','filebtn'+(FX.dfile?' has':''),FX.dfile?FX.dfile.name:'문서 파일을 선택해 주세요 (.txt .md .pdf)');if(FX.dfile){const x=h('span',null,'✕');x.onclick=e=>{e.stopPropagation();FX.dfile=null;rerender()};fb.append(x)}
       fb.onclick=async()=>{const fs=await pickFiles('.txt,.md,.pdf,text/plain,application/pdf',false);if(fs.length){FX.dfile=fs[0];rerender()}};s1.append(fb,h('p','hint','한글(hwp)·워드 파일은 글을 복사해서 "글 붙여넣기"로 넣어 주세요.'))}
     else if(F.src==='link'){field(s1,'URL','',F.url,'기사나 블로그 링크를 넣어주세요.',v=>F.url=v,'url');s1.append(h('p','hint','네이버 블로그처럼 못 읽는 곳도 있어요. 그럴 땐 글을 복사해 "글 붙여넣기"로 넣어 주세요.'))}
